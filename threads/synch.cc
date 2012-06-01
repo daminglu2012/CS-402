@@ -100,13 +100,115 @@ Semaphore::V()
 // Dummy functions -- so we can compile our later assignments 
 // Note -- without a correct implementation of Condition::Wait(), 
 // the test case in the network assignment won't work!
-Lock::Lock(char* debugName) {}
-Lock::~Lock() {}
-void Lock::Acquire() {}
-void Lock::Release() {}
 
-Condition::Condition(char* debugName) { }
-Condition::~Condition() { }
-void Condition::Wait(Lock* conditionLock) { ASSERT(FALSE); }
-void Condition::Signal(Lock* conditionLock) { }
-void Condition::Broadcast(Lock* conditionLock) { }
+//-> DL
+Lock::Lock(char* debugName) {
+	name = debugName;
+	lockwaitQueue = new List;
+	isFree = true;
+	owner = NULL; // where to assign ? DONE
+}
+
+Lock::~Lock() {
+	delete lockwaitQueue;
+}
+
+bool Lock::isHeldByCurrentThread(){
+	return (owner == currentThread);
+}
+
+void Lock::Acquire() {
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    if(isHeldByCurrentThread()){
+        (void) interrupt->SetLevel(oldLevel);
+        return;
+    }
+    if(isFree){
+    	isFree = false;
+    	owner = currentThread;
+    }else{
+    	lockwaitQueue->Append((void *)currentThread);
+    	currentThread->Sleep();
+    }
+    (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+}
+
+void Lock::Release() {
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    if(!isHeldByCurrentThread()){
+    	printf("Error in Lock::Release: [%s] is not the owner of lock: %s\n", currentThread->getName(),name);
+    	(void) interrupt->SetLevel(oldLevel);
+    	return;
+    }
+    if(!lockwaitQueue->IsEmpty()){
+    	Thread* cur = (Thread *)lockwaitQueue->Remove();
+    	owner = cur;
+    	scheduler->ReadyToRun(cur);
+    	// Mesa semantics
+    }else{
+    	isFree = true;
+    	owner = NULL;
+    }
+    (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+}
+
+Condition::Condition(char* debugName) {
+	name = debugName;
+	waitinglockQueue = new List;
+	waitingLock = NULL;
+}
+
+Condition::~Condition() {
+	delete waitinglockQueue;
+	waitingLock = NULL;
+}
+
+void Condition::Wait(Lock* conditionLock) {
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    if(conditionLock == NULL){
+    	printf("Error in Condition::Wait: [%s] is NULL in Condition::Wait\n",conditionLock->getName());
+        (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+        return;
+    }
+    if(waitingLock == NULL){
+    	waitingLock = conditionLock;
+    }
+    if(conditionLock != waitingLock){
+    	printf("Error in Condition::Wait: conditionLock(%s) != waitingLock(%s) \n",conditionLock->getName(),waitingLock->getName());
+        (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+        return;
+    }
+    conditionLock->Release();
+    waitinglockQueue->Append((void *)currentThread);
+    currentThread->Sleep();
+    conditionLock->Acquire();
+    (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+}
+
+void Condition::Signal(Lock* conditionLock) {
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    if(waitinglockQueue->IsEmpty()){
+        (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+        return;
+    }
+    if(waitingLock != conditionLock){
+    	printf("Error in Condition::Signal: conditionLock(%s) != waitingLock(%s) \n",conditionLock->getName(),waitingLock->getName());
+        (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+        return;
+    }
+
+    Thread* woken = (Thread *)waitinglockQueue->Remove();
+  	scheduler->ReadyToRun(woken);
+
+  	if(waitinglockQueue == NULL){
+		waitingLock = NULL;
+	}
+    (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+}
+
+void Condition::Broadcast(Lock* conditionLock) {
+	while(!waitinglockQueue->IsEmpty()){
+		Signal(conditionLock);
+	}
+}
+//<- DL
