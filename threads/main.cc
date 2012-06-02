@@ -75,11 +75,15 @@ extern void MailTest(int networkID);
 //		ex: "nachos -d +" -> argv = {"nachos", "-d", "+"}
 //----------------------------------------------------------------------
 <<<<<<< HEAD
+<<<<<<< HEAD
 // this is dummy change
 =======
 
 // By Stanley
 >>>>>>> sty By Stanley
+=======
+
+>>>>>>> parent of 773e22c... test push
 int
 main(int argc, char **argv)
 {
