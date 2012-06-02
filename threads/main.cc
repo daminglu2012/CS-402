@@ -60,6 +60,7 @@ extern void TestSuite(void), Copy(char *unixFile, char *nachosFile);
 extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
+extern void TestCustSales();
 
 //----------------------------------------------------------------------
 // main
@@ -85,7 +86,8 @@ main(int argc, char **argv)
     
 #ifdef THREADS
     //ThreadTest();
-    TestSuite();
+    // TestSuite();
+    TestCustSales();
 #endif
 
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
