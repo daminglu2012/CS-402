@@ -157,7 +157,7 @@ void t3_waiter() {
 void t3_signaller() {
 
     // Don't signal until someone's waiting
-
+    
     for ( int i = 0; i < 5 ; i++ )
 	t3_s1.P();
     t3_l1.Acquire();
@@ -359,44 +359,5 @@ void TestSuite() {
     t = new Thread("t5_t2");
     t->Fork((VoidFunctionPtr)t5_t2,0);
 
-}
-//------------------------------------------------------------------------
-// Daming's Test for Tennis
-
-Lock tennisLock("tennisLock");
-bool aHitBall = false;
-Condition tennisCV("tennisCV");
-
-void A() {
-	while(true){
-		tennisLock.Acquire();
-		printf("A is hitting the ball\n");
-		aHitBall = true;
-		tennisCV.Signal(&tennisLock);
-		tennisCV.Wait(&tennisLock);
-        tennisLock.Release();
-	}
-}
-
-void B(){
-    while(true){
-        tennisLock.Acquire();
-        if(!aHitBall){
-            tennisCV.Wait(&tennisLock);
-        }
-        printf("B is hitting the ball\n");
-        aHitBall = false;
-        tennisCV.Signal(&tennisLock);
-        tennisLock.Release();
-    }
-}
-
-void TestTennis() {
-    Thread *t;
-    t = new Thread("Player A");
-    t->Fork((VoidFunctionPtr)A,0);
-
-    t = new Thread("Player B");
-    t->Fork((VoidFunctionPtr)B,0);
 }
 #endif
