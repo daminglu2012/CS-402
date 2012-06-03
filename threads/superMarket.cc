@@ -1,9 +1,11 @@
 // Customer-Salesman Test
-// By Daming, Linda, Yao, Stanley
+// By Lu Sir, Linda, Yao, Stanley
 // @ Jun 2nd, 2012, Unversity Of Southern California
-
+#include <iostream>
 #include "system.h"
 #include "copyright.h"
+
+using namespace std;
 
 #ifdef CHANGED
 #include "synch.h"
@@ -11,27 +13,40 @@
 
 #ifdef CHANGED
 
-// Shared Data
+typedef enum {
+	FREE = 0,
+	BUSY,
+	ONBREAK,
+	READY
+} SalesStatus;
 
+// Shared Data
+Lock trollyLock("trollyLock");
 
 // Customer Thread
 void Customer(int ind) {
+    // Customer gets a trolly for shopping
+    cout << "Customer [" << ind
+         << "] enters the SuperMarket" << endl;
+    cout << "Customer [" << ind
+         << "] gets in line for a trolly" << endl;
+    trollyLock.Acquire();
 
+    cout << "Customer [" << ind
+         << "] has a trolly for shopping" << endl;
+
+    trollyLock.Release();
 }
 
-
-// Salesman Thread
 void Salesman(int ind) {
 
 }
 
 void TestCustSales() {
-	// Thread *salesThread = new Thread("Salesman Thread");
-	// salesThread->Fork((VoidFunctionPtr)Salesman, 0);
-
-	// Thread *custThread = new Thread("Customer Thread");
-	// custThread->Fork((VoidFunctionPtr)Customer, 0);
-
+    for (int i = 0; i < 30; i++) {
+        Thread *t = new Thread("Customer");
+        t->Fork((VoidFunctionPtr)Customer, i);
+    }
 }
 
 #endif
