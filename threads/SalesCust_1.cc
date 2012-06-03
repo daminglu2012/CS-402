@@ -22,7 +22,7 @@ void dl_Customer(int d){
     custSalesLock.Acquire();
     if(salesStatus == 1){
         custWaitingLineCount++;
-        printf("One more cust waiting, now totally %d waiting in line",
+        printf("One more cust waiting, now totally %d waiting in line\n",
                custWaitingLineCount);
         custWaitingCV.Wait(&custSalesLock);
     }
@@ -33,18 +33,20 @@ void dl_Customer(int d){
 }
 
 void dl_Salesman(int d){
-    custSalesLock.Acquire();
-    if(custWaitingLineCount>0){
-        custWaitingCV.Signal(&custSalesLock);
-        custWaitingLineCount--;
-        salesStatus = 1;
-        printf("Salesman %d is taking care a cust, ", d);
-        printf("now the # of cust waiting is %d", custWaitingLineCount);
-    }else{
-        salesStatus = 0;
+    while(true){
+        custSalesLock.Acquire();
+        if(custWaitingLineCount>0){
+            custWaitingCV.Signal(&custSalesLock);
+            custWaitingLineCount--;
+            salesStatus = 1;
+            printf("Salesman %d is taking care a cust, ", d);
+            printf("now the # of cust waiting is %d\n", custWaitingLineCount);
+        }else{
+            salesStatus = 0;
+        }
+        salesWaitingCV.Wait(&custSalesLock);
+        custSalesLock.Release();
     }
-    salesWaitingCV.Wait(&custSalesLock);
-    custSalesLock.Release();
 }
 
 void dl_SalesCust() {
@@ -53,9 +55,11 @@ void dl_SalesCust() {
     t->Fork((VoidFunctionPtr)dl_Salesman,0);
 
     for(int i=30; i>=1; i--){
-        t = new Thread(strcat("Cust ",&((char)i);
+        char ii = (char)i;
+        t = new Thread(strcat("Cust ",&ii));
         t->Fork((VoidFunctionPtr)dl_Customer,i);
     }
+
 }
 
 #endif
