@@ -61,7 +61,7 @@ extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
 extern void TestCustSales();
-extern void TestTennis();
+extern void dl_SalesCust();
 //----------------------------------------------------------------------
 // main
 // 	Bootstrap the operating system kernel.
@@ -88,7 +88,8 @@ main(int argc, char **argv)
     // ThreadTest();
     // TestSuite();
     // TestCustSales();
-    TestTennis();
+    // TestTennis();
+    dl_SalesCust();
 #endif
 
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
