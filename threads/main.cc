@@ -61,7 +61,7 @@ extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
 extern void TestCustSales();
-extern void dl_SalesCust();
+extern void dl_SalesCust(); // hi linlin!
 //----------------------------------------------------------------------
 // main
 // 	Bootstrap the operating system kernel.
