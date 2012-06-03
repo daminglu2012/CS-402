@@ -11,14 +11,6 @@ using namespace std;
 #include "synch.h"
 #endif
 
-#ifdef CHANGED
-
-typedef enum {
-	FREE = 0,
-	BUSY,
-	ONBREAK,
-	READY
-} SalesStatus;
 
 // Shared Data
 Lock trollyLock("trollyLock");
@@ -38,15 +30,9 @@ void Customer(int ind) {
     trollyLock.Release();
 }
 
-void Salesman(int ind) {
-
-}
-
 void TestCustSales() {
     for (int i = 0; i < 30; i++) {
         Thread *t = new Thread("Customer");
         t->Fork((VoidFunctionPtr)Customer, i);
     }
 }
-
-#endif
