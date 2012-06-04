@@ -90,8 +90,8 @@ main(int argc, char **argv)
     // ThreadTest();
     // TestSuite();
     // TestCustSales();
-    // dl_SalesCust();
-    TestCustSales();
+     dl_SalesCust();
+    //TestCustSales();
 #endif
 
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
