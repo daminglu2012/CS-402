@@ -53,6 +53,8 @@
 #include "utility.h"
 #include "system.h"
 
+#include "SupermarketSimulation.h" // our functions
+
 
 // External functions used by this file
 
@@ -64,6 +66,9 @@ extern void TestCustSales();
 
 extern void dl_SalesCust(); // hi linlin!
 extern void TennisTest();
+
+extern void RunSupermarketSimulation();
+
 //----------------------------------------------------------------------
 // main
 // 	Bootstrap the operating system kernel.
@@ -90,8 +95,10 @@ main(int argc, char **argv)
     // ThreadTest();
     // TestSuite();
     // TestCustSales();
-     dl_SalesCust();
-    //TestCustSales();
+    // dl_SalesCust();
+    // TestCustSales();
+    // SupermarketSimulation();
+    RunSupermarketSimulation();
 #endif
 
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
