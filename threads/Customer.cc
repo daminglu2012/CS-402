@@ -40,7 +40,7 @@ void Customer(int CustID){
     }
     SalesmenStatus[ReadySalesmanID] = 1;
     printf("C: Salesman [%d] is taking care Customer [%d]\n", ReadySalesmanID, CustID);
-    printf("C: Customer [%d] is enterning the store\n", CustID);
+    printf("C: Customer [%d] is entering the store\n", CustID);
     SalesWaitingCV.Signal(&CustToSalesLineLock);
     CustToSalesLineLock.Release();
     //<< Interacts with Salesman
