@@ -6,6 +6,7 @@
 #include "synch.h"
 #include <cstring>
 #include <cstdio>
+#include <cassert>
 
 // define constants
 #define NUM_SALESMAN 3

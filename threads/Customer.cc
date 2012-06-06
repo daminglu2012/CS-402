@@ -17,14 +17,14 @@ Lock TrollyLock("OneTrollyLock");
 //<< Trolly is just one lock for now(Jun 4)
 
 int CustShoppingLists[NUM_CUSTOMER][10] = {
-    {1, 5, 2, 1, 3, 5, 2, 0, 1, 4},
-    {1, 5, 5, 1, 5, 5, 0, 3, 0, 4},
-    {2, 3, 2, 4, 4, 0, 1, 0, 4, 5},
-    {2, 3, 5, 2, 4, 2, 5, 5, 1, 2},
-    {1, 1, 5, 3, 2, 2, 4, 4, 3, 1},
-    {3, 0, 0, 0, 3, 2, 5, 4, 5, 5},
-    {4, 3, 1, 4, 3, 2, 4, 1, 1, 2},
-    {3, 2, 4, 4, 3, 2, 4, 0, 1, 5}
+    {1, 5, 2, 1, 3, 5, 2, 0, 1, 4}, // Cust 0: 12.00
+    {1, 5, 5, 1, 5, 5, 0, 3, 0, 4}, // Cust 1: 14.50
+    {2, 3, 2, 4, 4, 0, 1, 0, 4, 5}, // Cust 2: 12.50
+    {2, 3, 5, 2, 4, 2, 5, 5, 1, 2}, // Cust 3: 15.50
+    {1, 1, 5, 3, 2, 2, 4, 4, 3, 1}, // Cust 4: 13.00
+    {3, 0, 0, 0, 3, 2, 5, 4, 5, 5}, // Cust 5: 13.50
+    {4, 3, 1, 4, 3, 2, 4, 1, 1, 2}, // Cust 6: 12.50
+    {3, 2, 4, 4, 3, 2, 4, 0, 1, 5}  // Cust 7: 14.00
 };
 
 
@@ -93,15 +93,19 @@ void Customer(int CustID){
         // Assume Cust k has got all the items on his list CustShoppingLists[k][10]
         // Assume every Cust has enough money
         CustToCashierLineLock.Acquire();
+
         int MyCashierNum = FindShortestCashierLine(EachCashierLineLength, NUM_CASHIER);
-        printf("Customer [%d] chose Casher [%d] with a line of length [%d]\n",
+        printf("Customer [%d] chose Cashier [%d] with a line of length [%d]\n",
                CustID, MyCashierNum, EachCashierLineLength[MyCashierNum]);
         if(EachCashierLineLength[MyCashierNum]>0 || EachCashierIsBusy[MyCashierNum]){
             EachCashierLineLength[MyCashierNum]++;
+            printf("Cust [%d] just increased one, now Cashier [%d] Waiting Line Length = [%d]. Will decrease one...\n",
+            CustID, MyCashierNum, EachCashierLineLength[MyCashierNum]);
+
             EachCashierLineCV[MyCashierNum]->Wait(&CustToCashierLineLock);
 
             // My Cashier finally calls me
-            EachCashierIsBusy[MyCashierNum] = true;
+            EachCashierIsBusy[MyCashierNum] = true; // dupli on purpose
         }
 
         // After acquiring my Cashier's lock, we release the Line Lock
@@ -110,8 +114,11 @@ void Customer(int CustID){
 		// Or another Customer can line up for his Cashier
         CustToCashierLineLock.Release();
 
+        /*
+        printf("Customer [%d] waiting Cashier [%d] for EachCashierScanItemLock\n",
+               CustID, MyCashierNum);
+        */
         EachCashierScanItemLock[MyCashierNum]->Acquire();
-        EachCashierLineLength[MyCashierNum]--;
 
         // 'give' my items to my Cashier
         CustIDforEachCashier[MyCashierNum] = CustID;
@@ -120,8 +127,8 @@ void Customer(int CustID){
         // Wait Cashier to scan my items
         EachCashierScanItemCV[MyCashierNum]->Wait(EachCashierScanItemLock[MyCashierNum]);
 
-        printf("The total amount for myself (Customer [%d]) is %f",
-            CustID, CurCustTotal[CustID]);
+        printf("The total amount for myself (Customer [%d]) is %.2f\n",
+            CustID, CurCustTotal[MyCashierNum]);
 
         EachCashierScanItemLock[MyCashierNum]->Release();
     }

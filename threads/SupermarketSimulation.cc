@@ -57,7 +57,7 @@ void RunSupermarketSimulation(){
 			sprintf(name, "EachCashierLineCV_%d", i);
 			EachCashierLineCV[i] = new Condition(name);
 			EachCashierLineLength[i] = 0;
-			EachCashierIsBusy[i] = false;
+			EachCashierIsBusy[i] = true;
 			CustIDforEachCashier[i] = -1;
 			CurCustTotal[i] = 0.0;
 			name = new char[20];
