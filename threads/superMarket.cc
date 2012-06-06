@@ -21,20 +21,28 @@ Condition *GoodsNotEnoughCV[NUM_ITEMS];
 Lock CustWaitingLock("CustWaitingLock");
 Condition CustWaitingCV("CustWaitingCV");
 
+Lock FreeGoodsLoaderLock("FreeGoodsLoaderLock");
+Lock *GoodsLoaderLock[NUM_GOODSLOADER];
+Condition *GoodsLoaderCV[NUM_GOODSLOADER];
+
 Lock *SalesmanLock[NUM_SALESMAN];
 Condition *SalesmanCV[NUM_SALESMAN];
 
 int TotalItems[NUM_ITEMS] = {1000, 1000, 1000, 1000, 1000};
 int GoodsOnDemand[NUM_SALESMAN];
+int GoodsOnDemandNum[NUM_ITEMS] = {0, 0, 0, 0, 0};
+int WhoImTalkingTo[NUM_SALESMAN];
 int ImCustNumber[NUM_SALESMAN];
+int ImGoodsLoaderNumber[NUM_SALESMAN];
 int SalesmenStatus[NUM_SALESMAN] = {1, 1, 1};
+int GoodsLoaderStatus[NUM_GOODSLOADER];
 int CustWaitingLineCount = 0;
 
 // Customer Thread
 void CustomerShopping(int ind) {
     // Start Shopping
     // shopping list
-    int ShoppingList[NUM_ITEMS] = {1, 2, 1, 2, 1};
+    int ShoppingList[NUM_ITEMS] = {1, 1, 1, 1, 0};
 
     for (int i = 0; i < NUM_ITEMS; i++) {
         if (ShoppingList[i] == 0) {
@@ -88,6 +96,7 @@ void CustomerShopping(int ind) {
             WhoImTalkingTo[mySalesInd] = 1; // I am complainting customer
             ImCustNumber[mySalesInd] = ind; // my index is ind
             GoodsOnDemand[mySalesInd] = i; // ith goods are out of stock
+            GoodsOnDemandNum[i] += (TotalItems[i] - ShoppingList[i]); // How many ith goods I still need
 
             cout << "Customer [" << ind
                  << "] is asking for assistance about restocking of with DepartmentSalesman [" << mySalesInd
@@ -98,7 +107,7 @@ void CustomerShopping(int ind) {
             cout << "Customer [" << ind 
                  << "] has received assistance about restocking ["
                  << i << "] from DepartmentSalesman" << endl;
-            SalesmenStatus[mySalesInd] = 0;
+            // SalesmenStatus[mySalesInd] = 0;
             SalesmanLock[mySalesInd]->Release();
         }
 
@@ -136,33 +145,44 @@ void SalesmanShopping(int ind) {
         
         switch (WhoImTalkingTo[ind]) {
             case 0: // I am Talking to Greeting Customer
-
+                cout << "DepartmentSalesman[" << ind << "] welcomes Customer [" << ImCustNumber[ind] << "] to Department [1]" << endl;
+                // SalesmenStatus[ind] = 0; // set myself to be FREE
+                SalesmanLock[ind]->Release();
                 break;
             case 1: // I am talking to Complainting Customer
                 cout << "DepartmentSalesman[" << ind
                      << "] is informed by Customer[" << ImCustNumber[ind] 
                      << "] that [" << GoodsOnDemand[ind] 
                      << "] is out of stock" << endl;
-                SalesmanCV[ind]->Release();
+                SalesmanLock[ind]->Release();
 
-                GoodsLock[GoodsOnDemand[ind]]->Acquire();
+                // Find Available goods loader to restock the item
 
-                GoodsNotEnoughCV[GoodsOnDemand[ind]]->BroadCast(GoodsLock[GoodsOnDemand[ind]]);
+                // After the salesman is informed by the Goods loader the ith item is ready
+                // he broadcast customers waiting for ith item
+                // GoodsLock[GoodsOnDemand[ind]]->Acquire();
+                // cout << "DepartmentSalesman[" << ind 
+                //      << "] informs the Customer[" 
+                //      << ImCustNumber[ind] << "] that [" 
+                //      << GoodsOnDemand[ind] << "] is restocked" << endl;
+                // GoodsNotEnoughCV[GoodsOnDemand[ind]]->BroadCast(GoodsLock[GoodsOnDemand[ind]]);
                 
-                GoodsLock[GoodsOnDemand[ind]]->Release();
+                // GoodsLock[GoodsOnDemand[ind]]->Release();
 
                 break;
             case 2: // I am talking to Restocking man
-
+                cout << "DepartmentSalesman[" << ind 
+                     << "] is informed by the GoodsLoader[" 
+                     << ImGoodsLoaderNumber[ind] << "] that [" 
+                     << GoodsOnDemand[ind] << "] is restocked" << endl;
+                // SalesmenStatus[ind] = 0;
+                SalesmanLock[ind]->Release();
                 break;
+
             default:
                 break;
 
         }
 
     }
-}
-
-void Stockman() {
-
 }

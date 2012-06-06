@@ -8,9 +8,10 @@
 #include <cstdio>
 
 // define constants
-#define NUM_SALESMAN 3
-#define NUM_CUSTOMER 5
-#define NUM_ITEMS	 5
+#define NUM_SALESMAN 	3
+#define NUM_CUSTOMER 	5
+#define NUM_GOODSLOADER 5
+#define NUM_ITEMS	 	5
 
 //>> Variables for Cust_Sales
 extern Lock CustToSalesLineLock;
@@ -24,15 +25,23 @@ extern Condition *SalesmanCV[NUM_SALESMAN];
 extern Lock *GoodsLock[NUM_ITEMS];
 extern Condition *GoodsNotEnoughCV[NUM_ITEMS];
 
+extern Lock FreeGoodsLoaderLock;
+extern Lock *GoodsLoaderLock[NUM_GOODSLOADER];
+extern Condition *GoodsLoaderCV[NUM_GOODSLOADER];
+
 extern int CustWaitingLineCount;
 
 //0:not busy,1:busy,2:on break,3:ready
 extern int SalesmenStatus[NUM_SALESMAN];
+extern int GoodsLoaderStatus[NUM_GOODSLOADER]; // 0: free, 1: busy
+
 //<< Variables for Cust_Sales
 
 extern int WhoImTalkingTo[NUM_SALESMAN];
 extern int ImCustNumber[NUM_SALESMAN];
+extern int ImGoodsLoaderNumber[NUM_SALESMAN];
 extern int GoodsOnDemand[NUM_SALESMAN];
+extern int GoodsOnDemandNum[NUM_ITEMS];
 extern int TotalItems[NUM_ITEMS];
 extern float ItemPrices[NUM_ITEMS];
 
