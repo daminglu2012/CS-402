@@ -4,6 +4,7 @@
 #include <iostream>
 #include "system.h"
 #include "copyright.h"
+#include "SupermarketSimulation.h"
 
 using namespace std;
 
@@ -11,144 +12,104 @@ using namespace std;
 #include "synch.h"
 #endif
 
-#define MAX_CUSTOMER 30
-#define MAX_SALESMAN 3
-
-typedef enum {
-    FREE = 0,
-    BUSY,
-    ONBREAK,
-    READYFORSERVICE
-} SalesStatus;
-
 // Shared Data
-Lock trollyLock("trollyLock");
-Lock custSalesLock("custSalesLock"), salesmanLock[3]("salesmanLock");
+// Lock trollyLock("trollyLock");
 
-Condition custWaitingCV("custWaitingCV"), salesmanCV[3]("salemanCV");
+Lock *GoodsLock[NUM_ITEMS];
+Condition *GoodsNotEnoughCV[NUM_ITEMS];
 
-int salesCustNum[MAX_SALESMAN];    // monitor var
+Lock CustWaitingLock("CustWaitingLock");
+Condition CustWaitingCV("CustWaitingCV");
 
-SalesStatus salesStatus[MAX_SALESMAN] = {BUSY, BUSY, BUSY};
+Lock *SalesmanLock[NUM_SALESMAN];
+Condition *SalesmanCV[NUM_SALESMAN];
 
-int custWaitingLineCount = 0; // greeting customer
-int complaintingWaitingLineCount = 0; // complainting customer
-int goodsLoaderWaitingLineCount = 5;    // stock boy
-int whoImTalkingTo[MAX_SALESMAN]; // 0 - CC(Complainting Customer)
-                                  // 1 - GC(Greeting Customer)
-                                  // 2 - GL(Goods Loader)
-                                  // 3 - AVAILABLE
-
-Lock complaintingCustSalesLock("complaintingCustSalesLock");
-Condition complaintCustWaitingCV("complaintCustWaitingCV");
+int TotalItems[NUM_ITEMS] = {1000, 1000, 1000, 1000, 1000};
+int GoodsOnDemand[NUM_SALESMAN];
+int ImCustNumber[NUM_SALESMAN];
+int SalesmenStatus[NUM_SALESMAN] = {1, 1, 1};
+int CustWaitingLineCount = 0;
 
 // Customer Thread
-void Customer(int ind) {
-    // Customer gets a trolly for shopping
-    // cout << "Customer [" << ind
-    //      << "] enters the SuperMarket" << endl;
-    // cout << "Customer [" << ind
-    //      << "] gets in line for a trolly" << endl;
-
-    // trollyLock.Acquire();
-
-    // cout << "Customer [" << ind
-    //      << "] has a trolly for shopping" << endl;
-
-    // trollyLock.Release();
-
-    // Interact with multiple(up to 3) salesmen
-    custSalesLock.Acquire();
-
-    bool allBusy = true;
-    for (int i = 0; i < 3; i++) {
-        if (salesStatus[i] == FREE) {
-            allBusy = false;
-            break;
-        }
-    }
-
-    if (allBusy) {
-        cout << "Customer [" << ind
-             << "] gets in line for Department 1" << endl;
-        custWaitingLineCount++;
-        custWaitingCV.Wait(&custSalesLock);
-    }
-
-    int mySalesInd;
-    for (int i = 0; i < 3; i++) {
-        if (salesStatus[i] == FREE) {
-            salesStatus[i] = READYFORSERVICE;
-            mySalesInd = i;
-            break;
-        } else if (salesStatus[i] == READYFORSERVICE) {
-            mySalesInd = i;
-            break;
-        }
-    }
-
-    custSalesLock.Release();
-
-    salesmanLock[mySalesInd].Acquire();
-    salesStatus[mySalesInd] = BUSY;
-    salesCustNum[mySalesInd] = ind; // salesman[mySalesInd] is interacting with customer[ind]
-    cout << "Customer [" << ind
-         << "] is interacting with DepartmentSalesman [" << mySalesInd
-         << "] of Department 1" << endl;
-    salesmanCV[mySalesInd].Signal(&salesmanLock[mySalesInd]); // signal the salesman who is waiting for me
-    salesmanCV[mySalesInd].Wait(&salesmanLock[mySalesInd]); // 
-    salesStatus[mySalesInd] = FREE;
-    salesmanLock[mySalesInd].Release();
-
+void CustomerShopping(int ind) {
     // Start Shopping
-    /*
-        // shopping list
-        custShoppingList[10] = {1, 0, 2, 0, 0, 1, 4, 1, 0, 0};
-        
-        for (int i = 0; i < 10; i++) {
-            if (custShoppingList[i] == 0) {
-                continue;
-            }
+    // shopping list
+    int ShoppingList[NUM_ITEMS] = {1, 2, 1, 2, 1};
 
-            itemLock[i].Acquire();
-
-            if (item[i] >= custShoppingList[i]) {
-                cout << "Customer has found [item] and place [number] in the trolly" << endl;
-                item[i] -= itemWantdNum;
-                if (item[i] < 0)
-                    item[i] = 0;
-
-                itemLock[i].Release();
-            } else {
-                custSalesLock.Acquire();
-                itemLock[i].Release();
-
-                if (salesmen are all busy) {
-                    complaintCustWaitingLineCount++;
-                    complaintCustWaitingCV.Wait(&custSalesLock);
-                }
-
-                get mySalesInd;
-                custSalesLock.Release();
-
-                salesmanLock[mySalesInd].Acquire();
-                salesStatus[mySalesInd] = BUSY;
-                whoImTalkingTo[mySalesInd] = ind;
-                cout << "Customer is asking for assistance about restocking of [item] from DepartmentSalesman[ind]" << endl;
-                salesmanCV[mySalesInd].Signal(&salesmanLock[mySalesInd]); // Signal salesman who is waiting for me
-
-                // Here I am, I will wait for your response
-                salesmanCV[mySalesInd].Wait(&salesmanLock[mySalesInd]); // wait for salesman to inform the item is ready
-
-
-                salesStatus[mySalesInd] = FREE;
-                cout << "Customer has received assistance about restocking [item] from DepartmentSalesman[ind]" << endl;
-                salesmanCV[mySalesInd].Release();
-
-            }
-
+    for (int i = 0; i < NUM_ITEMS; i++) {
+        if (ShoppingList[i] == 0) {
+            continue;
         }
-    */
+
+        GoodsLock[i]->Acquire();
+
+        // Not Enough Goods, 
+        // First go to waiting line to wait to see Salesman
+        if (ShoppingList[i] > TotalItems[i]) {
+            CustWaitingLock.Acquire(); // go to the waiting line
+
+            // if salesmen are all busy, wait for some FREE salesman to signal me    
+            bool allBusy = true;
+            for (int j = 0; j < NUM_SALESMAN; j++) {
+                if (SalesmenStatus[j] == 1) {
+                    allBusy = false;
+                    break;
+                }
+            }
+
+            if (allBusy) {
+                CustWaitingLineCount++;
+                CustWaitingCV.Wait(&CustWaitingLock);
+            }
+
+            // Ready to meet some salesman, record his ID
+            int mySalesInd;
+            for (int j = 0; j < NUM_SALESMAN; j++) {
+                if (SalesmenStatus[j] == 0) { // if some salesman is FREE, 
+                    SalesmenStatus[j] = 3; // set his status to READY
+                    mySalesInd = j;
+                    break;
+                }
+            }
+
+            cout << "Customer[" << ind 
+                << "] is not able to find [" << i 
+                << "] and is searching for DepartmentSalesmen[" << mySalesInd 
+                << "]" << endl;
+
+            CustWaitingLock.Release();
+
+            // Interact with saleman with [mySalesInd]
+            SalesmanLock[mySalesInd]->Acquire();
+            SalesmenStatus[mySalesInd] = 1;        
+            // tell salesman[mySalesInd] who I am, my index?(I am Complainting customer complainting Item[i])
+            // and which Item I am complainting for
+            
+            WhoImTalkingTo[mySalesInd] = 1; // I am complainting customer
+            ImCustNumber[mySalesInd] = ind; // my index is ind
+            GoodsOnDemand[mySalesInd] = i; // ith goods are out of stock
+
+            cout << "Customer [" << ind
+                 << "] is asking for assistance about restocking of with DepartmentSalesman [" << mySalesInd
+                 << "] of Department 1" << endl;
+
+            SalesmanCV[mySalesInd]->Signal(SalesmanLock[mySalesInd]);
+            GoodsNotEnoughCV[i]->Wait(GoodsLock[i]);
+            cout << "Customer [" << ind 
+                 << "] has received assistance about restocking ["
+                 << i << "] from DepartmentSalesman" << endl;
+            SalesmenStatus[mySalesInd] = 0;
+            SalesmanLock[mySalesInd]->Release();
+        }
+
+        TotalItems[i] -= ShoppingList[i];
+        cout << "Customer[" << ind
+            << "] has found [" << i
+            << "] and place [" << ShoppingList[i]
+            << "] in the trolly" << endl;
+        GoodsLock[i]->Release(); 
+    }
+    cout << "Customer[" << ind << "] has finished shopping in Department[1]" << endl;
 
     // cout << "Customer has found [item] and place [number] in the trolly" << endl;
     // cout << "Customer is not able to find [item] and is searching for DepartmentSalesmen[ind]" << endl;
@@ -158,88 +119,50 @@ void Customer(int ind) {
     // Finish Shopping
 }
 
-// Salesman Thread
-// cout << "DepartmentSalesman [ind] is informed by Customer [ind] that [item] is out of stock" << endl;
-// cout << "DepartmentSalesman [ind] informs the GoodsLoader [ind] that [item] is out of stock" << endl;
-// cout << "DepartmentSalesman [ind] is informed by the GoodsLoader [ind] that [item] is restocked" << endl;
-// cout << "DepartmentSalesman [ind] informs the Customer [ind] that [item] is restocked" << endl;
-void Salesman(int ind) {
+void SalesmanShopping(int ind) {
     while (1) {
-        custSalesLock.Acquire();
-
-        if (complaintingWaitingLineCount > 0) {
-            salesmanCV[ind].Signal(salesmanLock[ind]);
-        } else if (custWaitingLineCount > 0) {
-            whoImTalkingTo[ind] = 1;
-        } else if (goodsLoaderWaitingLineCount > 0) {
-            whoImTalkingTo[ind] = 2;
+        CustWaitingLock.Acquire();
+        if (CustWaitingLineCount > 0) {
+            CustWaitingCV.Signal(&CustWaitingLock);
+            CustWaitingLineCount--;
+            SalesmenStatus[ind] = 1; // Busy or READY?
         } else {
-            whoImTalkingTo[ind] = 3;
+            SalesmenStatus[ind] = 0;
         }
 
-        /*
-            Greeting Customer - GC
-            Complainting Customer - CC
-            Goods Loader - GL
+        SalesmanLock[ind]->Acquire();
+        CustWaitingLock.Release();
+        SalesmanCV[ind]->Wait(SalesmanLock[ind]); // Wait for customer to come to me
+        
+        switch (WhoImTalkingTo[ind]) {
+            case 0: // I am Talking to Greeting Customer
 
-            if (CC is in line) {
-                
-            } else if (GC is in line) {
-                
-            } else if (GL is in line) {
-                
-            } else { // I'm available
-                
-            }
+                break;
+            case 1: // I am talking to Complainting Customer
+                cout << "DepartmentSalesman[" << ind
+                     << "] is informed by Customer[" << ImCustNumber[ind] 
+                     << "] that [" << GoodsOnDemand[ind] 
+                     << "] is out of stock" << endl;
+                SalesmanCV[ind]->Release();
 
-            salesmanLock[ind].Acquire();
-            custSalesLock.Release();
-            salesmanCV[ind].Wait(&salesmanLock[ind]);
-            int mycustInd = salesCustNum[ind];
-            switch (whoImTalkingTo[ind]) {
-                case 0: // CC
-                    // TODO ... broadcase customers who are complainting for item X
-                    break;
-                case 1: // GC
-                    // TODO ... cout << "Welcome Customer[myCustInd]" << endl;
-                    break;
-                case 2: // GL
-                    // TODO ... load goods
-                    break;
-                case 3: // AVAILABLE
-                    // TODO ...
-                    salesStatus[ind] = FREE;
-                    break;
-            }
-            salesmanLock[ind].Release();
-        */
+                GoodsLock[GoodsOnDemand[ind]]->Acquire();
 
-        if (custWaitingLineCount > 0) {
-            custWaitingCV.Signal(&custSalesLock);
-            custWaitingLineCount--;
-            salesStatus[ind] = READYFORSERVICE;
-        } else {
-            salesStatus[ind] = FREE;
+                GoodsNotEnoughCV[GoodsOnDemand[ind]]->BroadCast(GoodsLock[GoodsOnDemand[ind]]);
+                
+                GoodsLock[GoodsOnDemand[ind]]->Release();
+
+                break;
+            case 2: // I am talking to Restocking man
+
+                break;
+            default:
+                break;
+
         }
 
-        salesmanLock[ind].Acquire();
-        custSalesLock.Release();
-
-        salesmanCV[ind]->Wait(&salesmanLock[ind]);
-        cout << "Salesman [" << ind
-             << "] welcomes Customer [" << salesCustNum[ind]
-             << "] for Department 1" << endl;
-        salesStatus[ind] = BUSY;
-        int myCustInd = salesCustNum[ind];
-
-        salesmanCV[ind].Signal(&salesmanLock[ind]);
-        salesmanLock[ind].Release();
     }
 }
 
-void TestCustSales() {
-    for (int i = 1; i <= 30; i++) {
-        Thread *t = new Thread("Customer");
-        t->Fork((VoidFunctionPtr)Customer, i);
-    }
+void Stockman() {
+
 }

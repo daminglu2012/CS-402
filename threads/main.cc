@@ -62,11 +62,7 @@ extern void TestSuite(void), Copy(char *unixFile, char *nachosFile);
 extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
-extern void TestCustSales();
-
 extern void dl_SalesCust(); // hi linlin!
-extern void TennisTest();
-
 extern void RunSupermarketSimulation();
 
 //----------------------------------------------------------------------
@@ -93,11 +89,7 @@ main(int argc, char **argv)
 
 #ifdef THREADS
     // ThreadTest();
-    // TestSuite();
-    // TestCustSales();
     // dl_SalesCust();
-    // TestCustSales();
-    // SupermarketSimulation();
     RunSupermarketSimulation();
 #endif
 
