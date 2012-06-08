@@ -9,7 +9,7 @@
 
 // define constants
 #define NUM_SALESMAN 	3
-#define NUM_CUSTOMER 	5
+#define NUM_CUSTOMER 	10
 #define NUM_GOODSLOADER 5
 #define NUM_ITEMS	 	5
 
@@ -26,10 +26,14 @@ extern Lock *GoodsLock[NUM_ITEMS];
 extern Condition *GoodsNotEnoughCV[NUM_ITEMS];
 
 extern Lock FreeGoodsLoaderLock;
+extern Condition FreeGoodsLoaderCV;
 extern Lock *GoodsLoaderLock[NUM_GOODSLOADER];
 extern Condition *GoodsLoaderCV[NUM_GOODSLOADER];
 
+extern Lock StockRoomLock;
+
 extern int CustWaitingLineCount;
+extern int SalesmanWaitingLineCount;
 
 //0:not busy,1:busy,2:on break,3:ready
 extern int SalesmenStatus[NUM_SALESMAN];
@@ -39,7 +43,8 @@ extern int GoodsLoaderStatus[NUM_GOODSLOADER]; // 0: free, 1: busy
 
 extern int WhoImTalkingTo[NUM_SALESMAN];
 extern int ImCustNumber[NUM_SALESMAN];
-extern int ImGoodsLoaderNumber[NUM_SALESMAN];
+extern int ImGoodsLoaderNumer[NUM_SALESMAN];
+extern int ImSalesmanNumber[NUM_GOODSLOADER];
 extern int GoodsOnDemand[NUM_SALESMAN];
 extern int GoodsOnDemandNum[NUM_ITEMS];
 extern int TotalItems[NUM_ITEMS];
@@ -48,9 +53,9 @@ extern float ItemPrices[NUM_ITEMS];
 // below are thread functions for each role
 void Salesman(int id);
 void Customer(int id);
-
+void GoodsLoader(int);
 void CustomerShopping(int);
-
+void SalesmanShopping(int);
 // this is our 'main' entrance
 extern void RunSupermarketSimulation();
 #endif
