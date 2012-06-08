@@ -49,11 +49,12 @@ void CustomerShopping(int ind) {
 
     bool allBusy = true;
     for (int j = 0; j < NUM_SALESMAN; j++) {
-        if (SalesmenStatus[j] == 0 || SalesmenStatus[j] == 3) {
+        if (SalesmenStatus[j] == 0) { // if one salesman is FREE
             allBusy = false;
             break;
         }
     }
+
     int mySalesInd;
     if (allBusy) {
         CustWaitingLineCount++;
@@ -78,16 +79,6 @@ void CustomerShopping(int ind) {
         }
     }
 
-    // Ready to meet some salesman who signals me, record his ID
-    // int mySalesInd;
-    // for (int j = 0; j < NUM_SALESMAN; j++) {
-    //     if (SalesmenStatus[j] == 3) { // if some salesman is READY, 
-    //         SalesmenStatus[j] = 1; // set his status to BUSY
-    //         mySalesInd = j;
-    //         break;
-    //     }
-    // }
-
     SalesmanLock[mySalesInd]->Acquire();
     ImCustNumber[mySalesInd] = ind;
     WhoImTalkingTo[mySalesInd] = 0;
@@ -97,7 +88,7 @@ void CustomerShopping(int ind) {
     SalesmanCV[mySalesInd]->Signal(SalesmanLock[mySalesInd]);
     CustWaitingLock.Release();
     SalesmanCV[mySalesInd]->Wait(SalesmanLock[mySalesInd]);
-    SalesmenStatus[mySalesInd] = 0;
+    // SalesmenStatus[mySalesInd] = 0;
     // cout << "Customer [" << ind << "] starts Shopping in Department[1]" << endl;
     SalesmanLock[mySalesInd]->Release();
 
@@ -218,63 +209,63 @@ void SalesmanShopping(int ind) {
                 SalesmanLock[ind]->Release();
                 break;
             // case 1: // I am talking to Complainting Customer
-                cout << "DepartmentSalesman[" << ind
-                     << "] is informed by Customer[" << ImCustNumber[ind] 
-                     << "] that [" << GoodsOnDemand[ind] 
-                     << "] is out of stock" << endl;
-                SalesmanLock[ind]->Release();
+            //     cout << "DepartmentSalesman[" << ind
+            //          << "] is informed by Customer[" << ImCustNumber[ind] 
+            //          << "] that [" << GoodsOnDemand[ind] 
+            //          << "] is out of stock" << endl;
+            //     SalesmanLock[ind]->Release();
 
-                // Find Available goods loader to restock the item
-                FreeGoodsLoaderLock.Acquire();
+            //     // Find Available goods loader to restock the item
+            //     FreeGoodsLoaderLock.Acquire();
 
-                bool AllBusy = true;
-                for (int j = 0; j < NUM_GOODSLOADER; j++) {
-                    if (GoodsLoaderStatus[j] == 0) {
-                        AllBusy = false;
-                        break;
-                    }
-                }
+            //     bool AllBusy = true;
+            //     for (int j = 0; j < NUM_GOODSLOADER; j++) {
+            //         if (GoodsLoaderStatus[j] == 0) {
+            //             AllBusy = false;
+            //             break;
+            //         }
+            //     }
 
-                if (AllBusy) {
-                    SalesmanWaitingLineCount++;
-                    FreeGoodsLoaderCV.Wait(&FreeGoodsLoaderLock);
-                }
+            //     if (AllBusy) {
+            //         SalesmanWaitingLineCount++;
+            //         FreeGoodsLoaderCV.Wait(&FreeGoodsLoaderLock);
+            //     }
 
-                int myGoodsLoader;
-                for (int j = 0; j < NUM_GOODSLOADER; j++) {
-                    if (GoodsLoaderStatus[j] == 0) {
-                        myGoodsLoader = j;
-                        GoodsLoaderStatus[j] = 1;
-                        break;
-                    }
-                }
+            //     int myGoodsLoader;
+            //     for (int j = 0; j < NUM_GOODSLOADER; j++) {
+            //         if (GoodsLoaderStatus[j] == 0) {
+            //             myGoodsLoader = j;
+            //             GoodsLoaderStatus[j] = 1;
+            //             break;
+            //         }
+            //     }
 
-                cout << "DepartmentSalesman[" << ind
-                     << "] informs the GoodsLoader[" 
-                     << "] that [" << GoodsOnDemand[ind]
-                     << "] is out of stock" << endl;
+            //     cout << "DepartmentSalesman[" << ind
+            //          << "] informs the GoodsLoader[" 
+            //          << "] that [" << GoodsOnDemand[ind]
+            //          << "] is out of stock" << endl;
 
-                FreeGoodsLoaderLock.Release();
-                break;
+            //     FreeGoodsLoaderLock.Release();
+            //     break;
             // case 2: // I am talking to Restocking man
-                cout << "DepartmentSalesman[" << ind 
-                     << "] is informed by the GoodsLoader[" 
-                     << ImGoodsLoaderNumber[ind] << "] that [" 
-                     << GoodsOnDemand[ind] << "] is restocked" << endl;
-                SalesmanLock[ind]->Release();
+            //     cout << "DepartmentSalesman[" << ind 
+            //          << "] is informed by the GoodsLoader[" 
+            //          << ImGoodsLoaderNumber[ind] << "] that [" 
+            //          << GoodsOnDemand[ind] << "] is restocked" << endl;
+            //     SalesmanLock[ind]->Release();
 
-                // After the salesman is informed by the Goods loader the ith item is ready
-                // he broadcast customers waiting for ith item
-                // GoodsLock[GoodsOnDemand[ind]]->Acquire();
-                // cout << "DepartmentSalesman[" << ind 
-                //      << "] informs the Customer[" 
-                //      << ImCustNumber[ind] << "] that [" 
-                //      << GoodsOnDemand[ind] << "] is restocked" << endl;
-                // GoodsNotEnoughCV[GoodsOnDemand[ind]]->BroadCast(GoodsLock[GoodsOnDemand[ind]]);
+            //     // After the salesman is informed by the Goods loader the ith item is ready
+            //     // he broadcast customers waiting for ith item
+            //     // GoodsLock[GoodsOnDemand[ind]]->Acquire();
+            //     // cout << "DepartmentSalesman[" << ind 
+            //     //      << "] informs the Customer[" 
+            //     //      << ImCustNumber[ind] << "] that [" 
+            //     //      << GoodsOnDemand[ind] << "] is restocked" << endl;
+            //     // GoodsNotEnoughCV[GoodsOnDemand[ind]]->BroadCast(GoodsLock[GoodsOnDemand[ind]]);
                 
-                // GoodsLock[GoodsOnDemand[ind]]->Release();
+            //     // GoodsLock[GoodsOnDemand[ind]]->Release();
 
-                break;
+            //     break;
 
         }
         
