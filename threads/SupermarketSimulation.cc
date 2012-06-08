@@ -34,30 +34,34 @@ void RunSupermarketSimulation(){
     //     t->Fork((VoidFunctionPtr)Customer, i);
     // }
 
-    for (int i = 0; i < NUM_ITEMS; i++) {
-        char index = (char)i;
-        GoodsLock[i] = new Lock(strcat("GoodsLock#", &index));        
-    }
+    // for (int i = 0; i < NUM_ITEMS; i++) {
+    //     char index = (char)i;
+    //     GoodsLock[i] = new Lock(strcat("GoodsLock#", &index));        
+    // }
 
-    for (int i = 0; i < NUM_SALESMAN; i++) {
-        char index = (char)i;
-        SalesmanLock[i] = new Lock(strcat("SalesmanLock#", &index));
-        SalesmanCV[i] = new Condition(strcat("SalesmanCV#", &index));
-    }
+    // for (int i = 0; i < NUM_SALESMAN; i++) {
+    //     char index = (char)i;
+    //     SalesmanLock[i] = new Lock(strcat("SalesmanLock#", &index));
+    //     SalesmanCV[i] = new Condition(strcat("SalesmanCV#", &index));
+    // }
+
+    // for (int i = 0; i < NUM_CUSTOMER; i++) {
+    //     char index = (char)i;
+    //     Thread *t = new Thread(strcat("Customer#", &index));
+    //     t->Fork((VoidFunctionPtr)CustomerShopping, i);
+    // }
     
-    for (int i = 0; i < NUM_CUSTOMER; i++) {
-        char index = (char)i;
-        Thread *t = new Thread(strcat("Customer#", &index));
-        t->Fork((VoidFunctionPtr)CustomerShopping, i);
-    }
-    
-    for (int i = 0; i < NUM_SALESMAN; i++) {
-        char index = (char)i;
-        Thread *t = new Thread(strcat("Salesman#", &index));
-        t->Fork((VoidFunctionPtr)SalesmanShopping, i);        
-    }
+    // for (int i = 0; i < NUM_SALESMAN; i++) {
+    //     char index = (char)i;
+    //     Thread *t = new Thread(strcat("Salesman#", &index));
+    //     t->Fork((VoidFunctionPtr)SalesmanShopping, i);        
+    // }
 
-
+    for (int i = 0; i < NUM_GOODSLOADER; i++) {
+        char index = (char)i;
+        Thread *t = new Thread(strcat("GoodsLoader#", &index));
+        t->Fork((VoidFunctionPtr)GoodsLoader, i);                
+    }
 
     // for (int i = 0; i < NUM_ITEMS; i++) {
     //     delete ShelfWaitingLock[i];

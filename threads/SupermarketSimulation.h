@@ -10,7 +10,7 @@
 // define constants
 #define NUM_SALESMAN 	3
 #define NUM_CUSTOMER 	10
-#define NUM_GOODSLOADER 5
+#define NUM_GOODSLOADER 10
 #define NUM_ITEMS	 	5
 
 //>> Variables for Cust_Sales
@@ -31,15 +31,19 @@ extern Lock *GoodsLoaderLock[NUM_GOODSLOADER];
 extern Condition *GoodsLoaderCV[NUM_GOODSLOADER];
 
 extern Lock StockRoomLock;
+extern Condition StockRoomCV;
 
 extern int CustWaitingLineCount;
 extern int SalesmanWaitingLineCount;
+extern int StockRoomWaitingLineCount;
 
 //0:not busy,1:busy,2:on break,3:ready
 extern int SalesmenStatus[NUM_SALESMAN];
 extern int GoodsLoaderStatus[NUM_GOODSLOADER]; // 0: free, 1: busy
 
 //<< Variables for Cust_Sales
+
+extern int WhoIsInTheStockRoom;
 
 extern int WhoImTalkingTo[NUM_SALESMAN];
 extern int ImCustNumber[NUM_SALESMAN];
