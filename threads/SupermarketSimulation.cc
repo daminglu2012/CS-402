@@ -10,6 +10,16 @@ void RunSupermarketSimulation(){
     char *name;
     int i;
 
+    for(i=0; i<NUM_CUSTOMER; i++){
+    	CustDataArr[i].CustID = i;
+    	CustDataArr[i].CashAmount = 14.00; // for test
+    	CustDataArr[i].BillAmount = 0.0;
+    	CustDataArr[i].CustRole = REGULAR; // for test
+    	for(int j=0; j<NUM_ITEM; j++){
+    		CustDataArr[i].ShoppingList[j] = CustShoppingLists[i][j];
+    	}
+    }
+
     //>> Test Cust_Sales
     if( !CustDebugMode|| (CustDebugMode && CustDebugIndex==1) )
     {

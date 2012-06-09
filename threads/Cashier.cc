@@ -71,9 +71,10 @@ void Cashier(int CashierIndex){
         // CustIDforEachCashier[MyCashierNum] = CustID;
 
         float CustTotal = 0.0;
+        int CurCustID = CustIDforEachCashier[CashierIndex];
         for(int s=0; s<NUM_ITEM; s++){
             CustTotal += GoodsPrices[s]*
-            CustShoppingLists[CustIDforEachCashier[CashierIndex]][s];
+            CustDataArr[CurCustID].ShoppingList[s];
         }
 
         CurCustTotal[CashierIndex] = CustTotal;

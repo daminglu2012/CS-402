@@ -19,6 +19,30 @@ extern bool CustDebugMode;
 extern int CustDebugIndex;
 //<< DEBUG Options
 
+//----------------------------------------------------------------------------------
+static int CustShoppingLists[NUM_CUSTOMER][10] = {
+    {1, 5, 2, 1, 3, 5, 2, 0, 1, 4}, // Cust 0: 12.00
+    {1, 5, 5, 1, 5, 5, 0, 3, 0, 4}, // Cust 1: 14.50
+    {2, 3, 2, 4, 4, 0, 1, 0, 4, 5}, // Cust 2: 12.50
+    {2, 3, 5, 2, 4, 2, 5, 5, 1, 2}, // Cust 3: 15.50
+    {1, 1, 5, 3, 2, 2, 4, 4, 3, 1}, // Cust 4: 13.00
+    {3, 0, 0, 0, 3, 2, 5, 4, 5, 5}, // Cust 5: 13.50
+    {4, 3, 1, 4, 3, 2, 4, 1, 1, 2}, // Cust 6: 12.50
+    {3, 2, 4, 4, 3, 2, 4, 0, 1, 5}  // Cust 7: 14.00
+};
+
+enum CustRole_T { REGULAR, PRIVILEGE, COMPLAIN, RESTOCK };
+
+struct CustomerData{
+	int CustID;
+	int ShoppingList[NUM_ITEM];
+	float CashAmount, BillAmount;
+	CustRole_T CustRole;//0:Privilege, 1:Regular, 2:Complain, 3:Restock
+};
+
+static CustomerData CustDataArr[NUM_CUSTOMER];
+//----------------------------------------------------------------------------------
+
 //>> Variables for Cust_Sales
 extern Lock CustToSalesLineLock;
 extern Condition CustWaitingCV, SalesWaitingCV;

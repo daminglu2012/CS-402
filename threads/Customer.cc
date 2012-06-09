@@ -16,17 +16,6 @@ int CustDebugIndex = 2;
 Lock TrollyLock("OneTrollyLock");
 //<< Trolly is just one lock for now(Jun 4)
 
-int CustShoppingLists[NUM_CUSTOMER][10] = {
-    {1, 5, 2, 1, 3, 5, 2, 0, 1, 4}, // Cust 0: 12.00
-    {1, 5, 5, 1, 5, 5, 0, 3, 0, 4}, // Cust 1: 14.50
-    {2, 3, 2, 4, 4, 0, 1, 0, 4, 5}, // Cust 2: 12.50
-    {2, 3, 5, 2, 4, 2, 5, 5, 1, 2}, // Cust 3: 15.50
-    {1, 1, 5, 3, 2, 2, 4, 4, 3, 1}, // Cust 4: 13.00
-    {3, 0, 0, 0, 3, 2, 5, 4, 5, 5}, // Cust 5: 13.50
-    {4, 3, 1, 4, 3, 2, 4, 1, 1, 2}, // Cust 6: 12.50
-    {3, 2, 4, 4, 3, 2, 4, 0, 1, 5}  // Cust 7: 14.00
-};
-
 
 void Customer(int CustID){
     //>> Customer get Trolly
