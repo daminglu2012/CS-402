@@ -278,11 +278,9 @@ void GoodsLoader(int ind) {
             TotalItems[GoodsOnDemand[ImSalesmanNumber[ind]]]++;
         }
 
-        
         cout << "GoodsLoader [" << ind
              << "] has restocked [" << GoodsOnDemand[ImSalesmanNumber[ind]] 
-             << "] in Department [1]" << endl;            
-    
+             << "] in Department [1]" << endl;
         // Load Goods Done!
 
         /* Go to Cust Waiting Line to inform FREE salesman that the [item] is ready */
