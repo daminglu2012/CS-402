@@ -9,8 +9,8 @@
 
 // define constants
 #define NUM_SALESMAN 	3
-#define NUM_CUSTOMER 	10
-#define NUM_GOODSLOADER 10
+#define NUM_CUSTOMER 	2
+#define NUM_GOODSLOADER 3
 #define NUM_ITEMS	 	5
 
 //>> Variables for Cust_Sales
@@ -50,7 +50,7 @@ extern int ImCustNumber[NUM_SALESMAN];
 extern int ImGoodsLoaderNumer[NUM_SALESMAN];
 extern int ImSalesmanNumber[NUM_GOODSLOADER];
 extern int GoodsOnDemand[NUM_SALESMAN];
-extern int GoodsOnDemandNum[NUM_ITEMS];
+// extern int GoodsOnDemandNum[NUM_ITEMS];
 extern int TotalItems[NUM_ITEMS];
 extern float ItemPrices[NUM_ITEMS];
 
