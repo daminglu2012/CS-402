@@ -4,22 +4,39 @@ This is our 'main' function
 
 #include "SupermarketSimulation.h"
 #include <cstdio>
-
+CustomerData* CustDataArr[NUM_CUSTOMER];
 void RunSupermarketSimulation(){
     Thread *t;
-    char *name;
+    char *name = new char[50];
     int i;
-
+    //>> Init CUSTOMER
     for(i=0; i<NUM_CUSTOMER; i++){
-    	CustDataArr[i].CustID = i;
-    	CustDataArr[i].CashAmount = 14.00; // for test
-    	CustDataArr[i].BillAmount = 0.0;
-    	CustDataArr[i].CustRole = REGULAR; // for test
-    	for(int j=0; j<NUM_ITEM; j++){
-    		CustDataArr[i].ShoppingList[j] = CustShoppingLists[i][j];
-    	}
+		CustomerData* CurNew = (CustomerData*)malloc(sizeof(CustomerData));
+		CurNew->CustID = i;
+		CurNew->BillAmount = 0.0;
+		CurNew->CashAmount = 14.00;
+		if(i==0){CurNew->CustRole = 0;}
+		else{CurNew->CustRole = 1;}
+		for(int j=0; j<NUM_ITEM; j++){
+			CurNew->ShoppingList[j] = CustShoppingLists[i][j];
+		}
+		CustDataArr[i] = CurNew;
     }
-
+    //<< Init CUSTOMER
+    /*
+    for(i=0; i<NUM_CUSTOMER; i++){
+    	printf("\nCust [%d]\n",i);
+    	printf("ID == [%d], ", CustDataArr[i].CustID);
+    	printf("CashAmount == [%.2f], ", CustDataArr[i].CashAmount);
+    	printf("BillAmount == [%.2f], ", CustDataArr[i].BillAmount);
+    	printf("CustRole == [%d], ", CustDataArr[i].CustRole);
+    	printf("\n Shopping List: ");
+    	for(int j=0; j<NUM_ITEM; j++){
+    		printf("[%d] ", CustDataArr[i].ShoppingList[j]);
+    	}
+    	printf("\n");
+    }
+    */
     //>> Test Cust_Sales
     if( !CustDebugMode|| (CustDebugMode && CustDebugIndex==1) )
     {
@@ -29,7 +46,6 @@ void RunSupermarketSimulation(){
 
         // init customers
         for(i=0; i<NUM_CUSTOMER; i++){
-            name = new char[20];
             sprintf(name, "Customer_%d", i);
             t = new Thread(name);
             t->Fork((VoidFunctionPtr)Customer,i);
@@ -53,33 +69,38 @@ void RunSupermarketSimulation(){
         printf("NUM_CUSTOMER = %d\n",NUM_CUSTOMER);
         printf("NUM_CASHIER = %d\n",NUM_CASHIER);
 
+        // init cashiers
+		for(i=0; i<NUM_CASHIER; i++){
+			sprintf(name, "EachCashierLineCV_%d", i);
+			EachCashierLineCV[i] = new Condition(name);
+
+			sprintf(name, "EachCashierPrvlLineCV_%d", i);
+			EachCashierPrvlLineCV[i] = new Condition(name);
+
+			EachCashierLineLength[i] = 0;
+			EachCashierRegLen[i] = 0;
+			EachCashierPrvLen[i] = 0;
+
+			EachCashierIsBusy[i] = true;
+			CustIDforEachCashier[i] = -1;
+			CurCustTotal[i] = 0.0;
+
+			sprintf(name, "EachCashierScanItemLock_%d", i);
+			EachCashierScanItemLock[i] = new Lock(name);
+
+			sprintf(name, "EachCashierScanItemCV_%d", i);
+			EachCashierScanItemCV[i] = new Condition(name);
+		}
+
         // init customers
         for(i=0; i<NUM_CUSTOMER; i++){
-            name = new char[20];
             sprintf(name, "Customer_%d", i);
             t = new Thread(name);
             t->Fork((VoidFunctionPtr)Customer,i);
         }
 
-        // init cashiers
-		for(i=0; i<NUM_CASHIER; i++){
-			name = new char[20];
-			sprintf(name, "EachCashierLineCV_%d", i);
-			EachCashierLineCV[i] = new Condition(name);
-			EachCashierLineLength[i] = 0;
-			EachCashierIsBusy[i] = true;
-			CustIDforEachCashier[i] = -1;
-			CurCustTotal[i] = 0.0;
-			name = new char[20];
-			sprintf(name, "EachCashierScanItemLock_%d", i);
-			EachCashierScanItemLock[i] = new Lock(name);
-			name = new char[20];
-			sprintf(name, "EachCashierScanItemCV_%d", i);
-			EachCashierScanItemCV[i] = new Condition(name);
-		}
-
         for(i=0; i<NUM_CASHIER; i++){
-            name = new char[20];
+
             sprintf(name, "Cashier_%d", i);
             t = new Thread(name);
             t->Fork((VoidFunctionPtr)Cashier,i);
