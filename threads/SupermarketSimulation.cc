@@ -15,11 +15,13 @@ void RunSupermarketSimulation(){
 		CurNew->CustID = i;
 		CurNew->BillAmount = 0.0;
 		CurNew->CashAmount = 14.00;
-		if(i==0){CurNew->CustRole = 0;}
-		else{CurNew->CustRole = 1;}
+		// Test Privilege
+		if(i==0){CurNew->CustRole = REGULAR;}
+		else{CurNew->CustRole = PRIVILEGE;}
 		for(int j=0; j<NUM_ITEM; j++){
 			CurNew->ShoppingList[j] = CustShoppingLists[i][j];
 		}
+		CurNew->ECustRole = REGULAR;
 		CustDataArr[i] = CurNew;
     }
     //<< Init CUSTOMER

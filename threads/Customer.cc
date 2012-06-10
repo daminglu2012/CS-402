@@ -83,7 +83,7 @@ void Customer(int CustID){
     {
         // Assume Cust k has got all the items on his list CustShoppingLists[k][10]
         // Assume every Cust has enough money
-        if(CustDataArr[CustID]->CustRole == 1){
+        if(CustDataArr[CustID]->CustRole == PRIVILEGE){
         	PrvlCustLineLock.Acquire();
         }else{
         	CustToCashierLineLock.Acquire();
@@ -95,7 +95,7 @@ void Customer(int CustID){
 
         if(EachCashierLineLength[MyCashierNum]>0 || EachCashierIsBusy[MyCashierNum]){
             EachCashierLineLength[MyCashierNum]++;
-            if(CustDataArr[CustID]->CustRole == 1){
+            if(CustDataArr[CustID]->CustRole == PRIVILEGE){
             	//privilege
                 printf("Cust [%d] waits in Prvl Q, now Cashier [%d] Waiting Line Length = [%d]. \n",
                 		CustID, MyCashierNum, EachCashierLineLength[MyCashierNum]);
@@ -119,7 +119,7 @@ void Customer(int CustID){
 		// Line Lock can call his next Customer
 		// Or another Customer can line up for his Cashier
      //   printf("Cust %d:CustToCashierLineLock.Release() \n",CustID);
-        if(CustDataArr[CustID]->CustRole == 1){
+        if(CustDataArr[CustID]->CustRole == PRIVILEGE){
         	PrvlCustLineLock.Release();
         }else{
         	CustToCashierLineLock.Release();

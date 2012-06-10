@@ -32,10 +32,9 @@ Condition* EachCashierScanItemCV[NUM_CASHIER];
 
 void Cashier(int CashierIndex){
     while(true){
+    	PrvlCustLineLock.Acquire();
     	bool hasPrivilge = false;
-        if(EachCashierPrvLen[CashierIndex]>0){ // problem!
-    	//if(false){
-        	PrvlCustLineLock.Acquire();
+        if(EachCashierPrvLen[CashierIndex]>0){
         	EachCashierPrvlLineCV[CashierIndex]->Signal(&PrvlCustLineLock);
             EachCashierLineLength[CashierIndex]--;
         	EachCashierPrvLen[CashierIndex]--;
@@ -46,6 +45,7 @@ void Cashier(int CashierIndex){
         }
 
         if(hasPrivilge == false){
+        	PrvlCustLineLock.Release();//release PRIVILEGE lock
 			//>> Interact with Customer
 			CustToCashierLineLock.Acquire();
 			// If there are Customers in the line, then

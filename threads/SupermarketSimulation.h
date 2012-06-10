@@ -43,15 +43,13 @@ static int CustShoppingLists[NUM_CUSTOMER][10] = {
 };
 */
 
-// doesn't work in struct ... ???
 enum CustRole_T { REGULAR, PRIVILEGE, COMPLAIN, RESTOCK };
 
 struct CustomerData{
 	int CustID;
 	int ShoppingList[NUM_ITEM];
 	float CashAmount, BillAmount;
-	//CustRole_T CustRole;//0:Regular, 1:PRIVILEGE, 2:Complain, 3:Restock
-	int CustRole; // Why cannot use CustRole_T
+	CustRole_T CustRole;
 };
 
 extern CustomerData* CustDataArr[NUM_CUSTOMER];
