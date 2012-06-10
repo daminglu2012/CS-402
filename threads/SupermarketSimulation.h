@@ -24,6 +24,7 @@ extern Lock *SalesmanLock[NUM_SALESMAN];
 extern Condition *SalesmanCV[NUM_SALESMAN];
 
 extern Lock *GoodsLock[NUM_ITEMS];
+extern Lock *GoodsIsFullLock[NUM_ITEMS];
 extern Condition *GoodsNotEnoughCV[NUM_ITEMS];
 
 extern Lock FreeGoodsLoaderLock;
@@ -54,6 +55,8 @@ extern int GoodsOnDemand[NUM_SALESMAN];
 // extern int GoodsOnDemandNum[NUM_ITEMS];
 extern int TotalItems[NUM_ITEMS];
 extern float ItemPrices[NUM_ITEMS];
+
+extern bool GoodsIsFull[NUM_ITEMS];
 
 // below are thread functions for each role
 void Salesman(int id);
