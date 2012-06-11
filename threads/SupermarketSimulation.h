@@ -15,8 +15,17 @@
 #define NUM_ITEM 10
 
 //>> DEBUG Options
+/*
 extern bool CustDebugMode;
 extern int CustDebugIndex;
+*/
+static bool CustDebugMode = true;//If Debug is off, then all the code will be executed
+enum CustDebugModeName_T{
+	Cust_Sales,
+	Cust_Cashier,
+	Cust_Manager
+};
+extern CustDebugModeName_T CustDebugModeName;
 //<< DEBUG Options
 
 //----------------------------------------------------------------------------------

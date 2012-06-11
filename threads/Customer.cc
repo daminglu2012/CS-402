@@ -6,8 +6,9 @@ Customer interacts with:
 */
 
 #include "SupermarketSimulation.h"
-bool CustDebugMode = true;//If Debug is off, then all the code will be executed
-int CustDebugIndex = 2;
+//bool CustDebugMode = true;//If Debug is off, then all the code will be executed
+//int CustDebugIndex = 2;
+
 //1: Cust-Sales
 //2: Cust-Cashier
 //3: ...
@@ -16,6 +17,8 @@ int CustDebugIndex = 2;
 Lock TrollyLock("OneTrollyLock");
 //<< Trolly is just one lock for now(Jun 4)
 
+
+CustDebugModeName_T CustDebugModeName = Cust_Cashier;
 
 void Customer(int CustID){
     //>> Customer get Trolly
@@ -33,7 +36,7 @@ void Customer(int CustID){
     //-------------------------------------------------------------------------------
 
     //>> Interacts with Salesman
-    if( !CustDebugMode|| (CustDebugMode && CustDebugIndex==1) )
+    if( !CustDebugMode|| (CustDebugMode && CustDebugModeName==Cust_Sales) )
     {
         CustToSalesLineLock.Acquire();
         int TotalReadySalesmen = 0; //for varifying, if TotalReadySalesmen>1, ERROR!
@@ -79,7 +82,7 @@ void Customer(int CustID){
     //-------------------------------------------------------------------------------
 
     //>> Interacts with Cashier
-    if( !CustDebugMode|| (CustDebugMode && CustDebugIndex==2) )
+    if( !CustDebugMode|| (CustDebugMode && CustDebugModeName==Cust_Cashier) )
     {
         // Assume Cust k has got all the items on his list CustShoppingLists[k][10]
         // Assume every Cust has enough money

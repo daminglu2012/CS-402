@@ -21,7 +21,6 @@ void RunSupermarketSimulation(){
 		for(int j=0; j<NUM_ITEM; j++){
 			CurNew->ShoppingList[j] = CustShoppingLists[i][j];
 		}
-		CurNew->ECustRole = REGULAR;
 		CustDataArr[i] = CurNew;
     }
     //<< Init CUSTOMER
@@ -40,7 +39,7 @@ void RunSupermarketSimulation(){
     }
     */
     //>> Test Cust_Sales
-    if( !CustDebugMode|| (CustDebugMode && CustDebugIndex==1) )
+    if( !CustDebugMode|| (CustDebugMode && CustDebugModeName==Cust_Sales) )
     {
         printf("Test Cust_Sales\n\n");
         printf("NUM_CUSTOMER = %d\n",NUM_CUSTOMER);
@@ -65,7 +64,7 @@ void RunSupermarketSimulation(){
     //<< Test Cust_Sales
 
     //>> Test Cust_Cashier
-    if( !CustDebugMode|| (CustDebugMode && CustDebugIndex==2) )
+    if( !CustDebugMode|| (CustDebugMode && CustDebugModeName==Cust_Cashier) )
     {
         printf("Test Cust_Cashier\n\n");
         printf("NUM_CUSTOMER = %d\n",NUM_CUSTOMER);
