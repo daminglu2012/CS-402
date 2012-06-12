@@ -20,6 +20,9 @@ Lock TrollyLock("OneTrollyLock");
 
 CustDebugModeName_T CustDebugModeName = Cust_Cashier;
 
+
+void RemoveOneItem(int CustID);
+
 void Customer(int CustID){
     //>> Customer get Trolly
 	/*
@@ -36,7 +39,7 @@ void Customer(int CustID){
     //-------------------------------------------------------------------------------
 
     //>> Interacts with Salesman
-    if( !CustDebugMode|| (CustDebugMode && CustDebugModeName==Cust_Sales) )
+    if(CustDebugMode && CustDebugModeName==Cust_Sales)
     {
         CustToSalesLineLock.Acquire();
         int TotalReadySalesmen = 0; //for varifying, if TotalReadySalesmen>1, ERROR!
@@ -82,7 +85,9 @@ void Customer(int CustID){
     //-------------------------------------------------------------------------------
 
     //>> Interacts with Cashier
-    if( !CustDebugMode|| (CustDebugMode && CustDebugModeName==Cust_Cashier) )
+    // ADD: and Manager
+    //if(CustDebugMode && CustDebugModeName==Cust_Cashier)
+    if(ManagerCustCashierDebugMode && MCC_DebugName==Manager_Cust_Cashier)
     {
         // Assume Cust k has got all the items on his list CustShoppingLists[k][10]
         // Assume every Cust has enough money
@@ -121,17 +126,12 @@ void Customer(int CustID){
         // so any Cashier that is waiting for the
 		// Line Lock can call his next Customer
 		// Or another Customer can line up for his Cashier
-     //   printf("Cust %d:CustToCashierLineLock.Release() \n",CustID);
         if(CustDataArr[CustID]->CustRole == PRIVILEGE){
         	PrvlCustLineLock.Release();
         }else{
         	CustToCashierLineLock.Release();
         }
 
-        /*
-        printf("Customer [%d] waiting Cashier [%d] for EachCashierScanItemLock\n",
-               CustID, MyCashierNum);
-        */
         EachCashierScanItemLock[MyCashierNum]->Acquire();
 
         // 'give' my items to my Cashier
@@ -142,14 +142,48 @@ void Customer(int CustID){
         // Wait Cashier to scan my items
         EachCashierScanItemCV[MyCashierNum]->Wait(EachCashierScanItemLock[MyCashierNum]);
 
-        printf("The total amount for myself (Customer [%d]) is %.2f\n",
-            CustID, CurCustTotal[MyCashierNum]);
+        if(CustDataArr[CustID]->InsufMoney){
+            // Insufficient Money, needs to talk to Manager
+        	CustToManagerLock.Acquire();
+        	CurInsufCustID = CustID;//MyID
+        	printf("Cust %d needs to meet Manager\n", CustID);
+        	InsufCustWaitingCV->Signal(&CustToManagerLock);
+
+        	while(CustDataArr[CustID]->InsufMoney){
+        		WaitForCheckCV->Wait(&CustToManagerLock);
+        		if(CustDataArr[CustID]->InsufMoney){
+        			printf("  still insuf, needs to remove one item\n");
+        			RemoveOneItem(CustID);
+        		}else{
+        			printf("  I can finally afford it! Goodbye! \n");
+        			WaitForCheckCV->Signal(&CustToManagerLock);
+        			CustToManagerLock.Release();
+        			break;
+        		}
+    			WaitForCheckCV->Signal(&CustToManagerLock);
+        	}
+
+        }else{
+        	printf("The total amount for myself (Customer [%d]) is %.2f\n",
+        			CustID, CurCustTotal[MyCashierNum]);
+        }
 
         EachCashierScanItemLock[MyCashierNum]->Release();
+        printf("  Cust [%d] DONE!\n", CustID);
+        FinishedCust++;
+        //printf("FinishedCust == %d",FinishedCust);
     }
     //<< Interacts with Cashier
 
     //-------------------------------------------------------------------------------
+}
 
-
+void RemoveOneItem(int CustID){
+	for(int i=0; i<NUM_ITEM; i++){
+		int temp = CustDataArr[CustID]->ShoppingList[i];
+		if(temp>0){
+			CustDataArr[CustID]->ShoppingList[i] = temp-1;
+			return;
+		}
+	}
 }

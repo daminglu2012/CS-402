@@ -101,16 +101,30 @@ void Cashier(int CashierIndex){
           //  CustDataArr[CurCustID].ShoppingList[s];
             		CustShoppingLists[CurCustID][s];
     		//CustDataArr[i].ShoppingList[j] = CustShoppingLists[i][j];
+        }
+        CurCustTotal[CashierIndex] = CustTotal;
 
+        if(CustTotal > CustDataArr[CurCustID]->CashAmount){
+        	// Insufficient Money!!!
+        	CustDataArr[CurCustID]->InsufMoney = true;
+    		EachCashierScanItemCV[CashierIndex]->Signal(EachCashierScanItemLock[CashierIndex]);
+        	CashierToManagerLock.Acquire();
+        	NumWaitingCashier++;
+        	CashierWaitingCV->Wait(&CashierToManagerLock);
+        	printf("Cashier [%d] tells Manager Cust [%d] has insufficient money\n",
+        			CashierIndex,CurCustID);
+        	CashierToManagerLock.Release();
+        }else{
+        	printf("Cashier [%d] asks Customer [%d] to pay [%.2f]\n",
+               CashierIndex, CurCustID, CustTotal);//Correct!
+
+            // The Cashier signals the Customer, who is asleep waiting for
+            // Cashier to scan his items and tell him the total amount
+    		EachCashierScanItemCV[CashierIndex]->Signal(EachCashierScanItemLock[CashierIndex]);
         }
 
-        CurCustTotal[CashierIndex] = CustTotal;
-        printf("Cashier [%d] asks Customer [%d] to pay [%.2f]\n",
-               CashierIndex, CurCustID, CustTotal);//Correct!
-        // The Cashier signals the Customer, who is asleep waiting for
-        // Cashier to scan his items and tell him the total amount
-		EachCashierScanItemCV[CashierIndex]->Signal(EachCashierScanItemLock[CashierIndex]);
         EachCashierScanItemLock[CashierIndex]->Release();
+       // printf("   Cashier DONE\n");
         //<< Interact with Customer
     }
 }
