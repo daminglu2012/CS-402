@@ -35,7 +35,7 @@ Condition StockRoomCV("StockRoomCV");
 Lock *SalesmanLock[NUM_SALESMAN];
 Condition *SalesmanCV[NUM_SALESMAN];
 
-int TotalItems[NUM_ITEMS] = {MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM};
+int TotalItems[NUM_ITEMS] = {MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM}; // not scalable
 int GoodsOnDemand[NUM_SALESMAN];
 // int GoodsOnDemandNum[NUM_ITEMS] = {0, 0, 0, 0, 0};
 int WhoImTalkingTo[NUM_SALESMAN];
@@ -44,7 +44,7 @@ int ImGoodsLoaderNumber[NUM_SALESMAN];
 int ImSalesmanNumber[NUM_GOODSLOADER];
 int SalesmenStatus[NUM_SALESMAN] = {1, 1, 1};
 int GoodsLoaderStatus[NUM_GOODSLOADER] = {1, 1, 1};
-bool GoodsIsFull[NUM_ITEMS] = {false, false, false, false, false};
+bool GoodsIsFull[NUM_ITEMS] = {false, false, false, false, false}; // not scalable
 
 int CustWaitingLineCount = 0;
 int SalesmanWaitingLineCount = 0;
