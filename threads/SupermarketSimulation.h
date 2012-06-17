@@ -7,6 +7,9 @@
 #include <cstring>
 #include <cstdio>
 #include <cassert>
+#include <iostream>
+
+using namespace std;
 
 // define constants
 #define NUM_SALESMAN 3
@@ -30,10 +33,16 @@ extern CustDebugModeName_T CustDebugModeName;
 static bool ManagerCustCashierDebugMode = true;
 enum MCC_DebugName_T{
 	Manager_Cust_Cashier,
-	Manager_Cashier
+	Manager_Cust_Cashier_Salesman,
+	Manager_Cust_Cashier_Salesman_GoodsLoader,
+	Test_Cust_Sales
 };
 extern MCC_DebugName_T MCC_DebugName;
 //<< DEBUG Options
+
+//----------------------------------------------------------------------------------
+extern Lock CustWaitingLock;
+
 
 //----------------------------------------------------------------------------------
 static int CustShoppingLists[NUM_CUSTOMER][10] = {
@@ -74,13 +83,19 @@ extern CustomerData* CustDataArr[NUM_CUSTOMER]; // *****
 //----------------------------------------------------------------------------------
 
 //>> Variables for Cust_Sales
-extern Lock CustToSalesLineLock;
+extern Lock CustWaitingLock;//Cust to Sales
 extern Condition CustWaitingCV, SalesWaitingCV;
 extern int CustWaitingLineCount;
 
 //0:not busy,1:busy,2:on break,3:ready
 extern int SalesmenStatus[NUM_SALESMAN];
 //<< Variables for Cust_Sales
+
+extern Lock *SalesmanLock[NUM_SALESMAN];
+extern Condition *SalesmanCV[NUM_SALESMAN];
+extern int ImCustNumber[NUM_SALESMAN];
+extern int WhoImTalkingTo[NUM_SALESMAN];
+
 
 //----------------------------------------------------------------------------------
 

@@ -35,6 +35,20 @@ void RunSupermarketSimulation(){
     }
     //<< Init CUSTOMER
 
+    //>> Init SALESMAN
+    for(i=0; i<NUM_SALESMAN; i++){
+		sprintf(name, "SalesmanLock_%d", i);
+    	SalesmanLock[i] = new Lock(name);
+
+		sprintf(name, "SalesmanCV_%d", i);
+		SalesmanCV[i] = new Condition(name);
+
+		ImCustNumber[i] = 0;
+		WhoImTalkingTo[i] = 0;
+		SalesmenStatus[i] = 1;
+    }
+    //<< Init SALESMAN
+
     //>> Init Manager
     InsufCustWaitingCV = new Condition("InsufCustWaitingCV");
     WaitForCheckCV = new Condition("WaitForCheckCV");
@@ -117,6 +131,8 @@ void RunSupermarketSimulation(){
         }
     }
     //<< Test Cust_Cashier
+
+    //>> Test Manager_Cust_Cashier
     if(ManagerCustCashierDebugMode && MCC_DebugName==Manager_Cust_Cashier)
     {
         printf("Test Manager_Cust_Cashier\n\n");
@@ -141,6 +157,27 @@ void RunSupermarketSimulation(){
         t->Fork((VoidFunctionPtr)Manager, 0);
 
     }
+    //<< Test Manager_Cust_Cashier
+
+    //>> Test Sale_Cust
+    if(ManagerCustCashierDebugMode && MCC_DebugName==Test_Cust_Sales){
+        printf("Test Cust_Sales\n\n");
+        printf("NUM_CUSTOMER = %d\n",NUM_CUSTOMER);
+        printf("NUM_SALESMAN = %d\n",NUM_SALESMAN);
+
+        for(i=0; i<NUM_CUSTOMER; i++){
+            sprintf(name, "Customer_%d", i);
+            t = new Thread(name);
+            t->Fork((VoidFunctionPtr)Customer,i);
+        }
+
+        for(i=0; i<NUM_SALESMAN; i++){
+            sprintf(name, "Salesman_%d", i);
+            t = new Thread(name);
+            t->Fork((VoidFunctionPtr)Salesman,i);
+        }
+    }
+    //<< Test Sales_Cust
 
     // <<<< Testing <<<< Testing <<<< Testing <<<< Testing <<<< Testing
 

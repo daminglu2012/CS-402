@@ -41,7 +41,7 @@ void Customer(int CustID){
     //>> Interacts with Salesman
     if(CustDebugMode && CustDebugModeName==Cust_Sales)
     {
-        CustToSalesLineLock.Acquire();
+    	CustWaitingLock.Acquire();
         int TotalReadySalesmen = 0; //for varifying, if TotalReadySalesmen>1, ERROR!
         int ReadySalesmanID = -1;
         for(int i=0; i<NUM_SALESMAN; i++){
@@ -58,7 +58,7 @@ void Customer(int CustID){
             CustWaitingLineCount++;
             printf("C: Customer [%d] is entering waiting line, now totally %d waiting in line\n",
                    CustID,CustWaitingLineCount);
-            CustWaitingCV.Wait(&CustToSalesLineLock);
+            CustWaitingCV.Wait(&CustWaitingLock);
         }
         // Here TotalReadySalesmen == 1, let's find the Ready One!
         for(int i=0; i<NUM_SALESMAN; i++){
@@ -73,22 +73,22 @@ void Customer(int CustID){
         SalesmenStatus[ReadySalesmanID] = 1;
         printf("C: Salesman [%d] is taking care Customer [%d]\n", ReadySalesmanID, CustID);
         printf("C: Customer [%d] is entering the store\n", CustID);
-        SalesWaitingCV.Signal(&CustToSalesLineLock);
-        CustToSalesLineLock.Release();
+        SalesWaitingCV.Signal(&CustWaitingLock);
+        CustWaitingLock.Release();
     }
     //<< Interacts with Salesman
 
     //-------------------------------------------------------------------------------
 
-    // !!! Cust Shopping, YZ will take care
-
-    //-------------------------------------------------------------------------------
-
     //>> Interacts with Cashier
     // ADD: and Manager
-    //if(CustDebugMode && CustDebugModeName==Cust_Cashier)
     if(ManagerCustCashierDebugMode && MCC_DebugName==Manager_Cust_Cashier)
     {
+    	//>> Interacts with Salesman
+
+    	//<< Interacts with Salesman
+
+    	//>> Interacts with Cashiers
         // Assume Cust k has got all the items on his list CustShoppingLists[k][10]
         // Assume every Cust has enough money
         if(CustDataArr[CustID]->CustRole == PRIVILEGE){
@@ -175,7 +175,60 @@ void Customer(int CustID){
     }
     //<< Interacts with Cashier
 
-    //-------------------------------------------------------------------------------
+    //>>>> Cust Sales Cashier Manager
+
+    //>> First test interactions between Cust and Sales
+    if(ManagerCustCashierDebugMode && MCC_DebugName==Test_Cust_Sales){
+    	printf("Test_Cust_Sales\n");
+        /****************** Customer Greeting For Goods ******************/
+        CustWaitingLock.Acquire();
+
+        bool allBusy = true;
+        for (int j = 0; j < NUM_SALESMAN; j++) {
+            if (SalesmenStatus[j] == 0) { // if one salesman is FREE
+                allBusy = false;
+                break;
+            }
+        }
+
+        int mySalesInd;
+        if (allBusy) {
+            CustWaitingLineCount++;
+            cout << "Customer [" << CustID
+                 << "] gets in line for the Department [1]"
+                 << endl;
+            CustWaitingCV.Wait(&CustWaitingLock);
+            for (int j = 0; j < NUM_SALESMAN; j++) {
+                if (SalesmenStatus[j] == 3) {
+                    SalesmenStatus[j] = 1;
+                    mySalesInd = j;
+                    break;
+                }
+            }
+        } else {
+            for (int j = 0; j < NUM_SALESMAN; j++) {
+                if (SalesmenStatus[j] == 0) {
+                    SalesmenStatus[j] = 1;
+                    mySalesInd = j;
+                    break;
+                }
+            }
+        }
+
+        SalesmanLock[mySalesInd]->Acquire();
+        ImCustNumber[mySalesInd] = CustID;
+        WhoImTalkingTo[mySalesInd] = 0;// Greeting Customer
+        cout << "Customer [" << CustID
+             << "] is interacting with DepartmentSalesman [" << mySalesInd
+             << "] of Department [1]" << endl;
+        SalesmanCV[mySalesInd]->Signal(SalesmanLock[mySalesInd]);
+        CustWaitingLock.Release();
+        SalesmanCV[mySalesInd]->Wait(SalesmanLock[mySalesInd]);
+        cout << "Customer [" << CustID << "] starts shopping" << endl; // Debug purpose
+        SalesmanLock[mySalesInd]->Release();
+    }
+    //<<
+
 }
 
 void RemoveOneItem(int CustID){
