@@ -80,6 +80,30 @@ void RunSupermarketSimulation(){
 	}
     //<< Init Cashier
 
+	//>> Init Goods Loader
+	for(i=0; i<NUM_ITEM; i++){ // Goods == Items
+		sprintf(name, "GoodsLock_%d", i);
+		GoodsLock[i] = new Lock(name);
+
+		sprintf(name, "GoodsNotEnoughCV_%d",i);
+		GoodsNotEnoughCV[i] = new Condition(name);
+	}
+	//<< Init Goods Loader
+
+	//
+	for(i=0; i<NUM_SALESMAN; i++){
+		GoodsOnDemand[i]=-1;//???
+		ImGoodsLoaderNumber[i]=-1;
+	}
+
+	for(i=0; i<NUM_GOODSLOADER; i++){
+		GoodsLoaderStatus[i] = 1; // busy
+		GoodsLoaderLock[i] = new Lock("GoodsLoaderLock");
+		GoodsLoaderCV[i] = new Condition("GoodsLoaderCV");
+		ImSalesmanNumber[i] = -1;
+	}
+	//
+
     // <<<< Initialization <<<< Initialization <<<< Initialization
 
     //------------------------------------------------------------------

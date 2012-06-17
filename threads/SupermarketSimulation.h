@@ -13,9 +13,11 @@ using namespace std;
 
 // define constants
 #define NUM_SALESMAN 3
-#define NUM_CUSTOMER 8 // for test
+#define NUM_CUSTOMER 4 // for test
 #define NUM_CASHIER 2
 #define NUM_ITEM 10
+#define MAX_ITEM 100
+#define  NUM_GOODSLOADER 4
 
 //>> DEBUG Options
 /*
@@ -45,28 +47,20 @@ extern Lock CustWaitingLock;
 
 
 //----------------------------------------------------------------------------------
-static int CustShoppingLists[NUM_CUSTOMER][10] = {
+static int CustShoppingLists[NUM_CUSTOMER][NUM_ITEM] = {
     {1, 5, 2, 1, 3, 5, 2, 0, 1, 4},  // Cust 0: 12.00
     {1, 5, 5, 1, 5, 5, 0, 3, 0, 4},  // Cust 1: 14.50
     {2, 3, 2, 4, 4, 0, 1, 0, 4, 5},  // Cust 2: 12.50
-    {2, 3, 5, 2, 4, 2, 5, 5, 1, 2},   // Cust 3: 15.50
-    {1, 1, 5, 3, 2, 2, 4, 4, 3, 1},  // Cust 4: 13.00
-    {3, 0, 0, 0, 3, 2, 5, 4, 5, 5},  // Cust 5: 13.50
-    {4, 3, 1, 4, 3, 2, 4, 1, 1, 2},  // Cust 6: 12.50
-    {3, 2, 4, 4, 3, 2, 4, 0, 1, 5}   // Cust 7: 14.00
+    {2, 3, 5, 2, 4, 2, 5, 5, 1, 2}   // Cust 3: 15.50
+//    {1, 1, 5, 3, 2, 2, 4, 4, 3, 1},  // Cust 4: 13.00
+//    {3, 0, 0, 0, 3, 2, 5, 4, 5, 5},  // Cust 5: 13.50
+//    {4, 3, 1, 4, 3, 2, 4, 1, 1, 2},  // Cust 6: 12.50
+//    {3, 2, 4, 4, 3, 2, 4, 0, 1, 5}   // Cust 7: 14.00
 };
-/*
-static int CustShoppingLists[NUM_CUSTOMER][10] = {
-    {1, 5, 2, 1, 3, 5, 2, 0, 1, 4}, // Cust 0: 12.00
-    {1, 5, 5, 1, 5, 5, 0, 3, 0, 4}, // Cust 1: 14.50
-    {2, 3, 2, 4, 4, 0, 1, 0, 4, 5}, // Cust 2: 12.50
-    {2, 3, 5, 2, 4, 2, 5, 5, 1, 2}, // Cust 3: 15.50
-    {1, 1, 5, 3, 2, 2, 4, 4, 3, 1}, // Cust 4: 13.00
-    {3, 0, 0, 0, 3, 2, 5, 4, 5, 5}, // Cust 5: 13.50
-    {4, 3, 1, 4, 3, 2, 4, 1, 1, 2}, // Cust 6: 12.50
-    {3, 2, 4, 4, 3, 2, 4, 0, 1, 5}  // Cust 7: 14.00
+static int TotalItems[NUM_ITEM] = {
+ MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM,
+ MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM
 };
-*/
 
 enum CustRole_T { REGULAR, PRIVILEGE, COMPLAIN, RESTOCK };
 
@@ -79,7 +73,21 @@ struct CustomerData{
 };
 
 extern CustomerData* CustDataArr[NUM_CUSTOMER]; // *****
+//----------------------------------------------------------------------------------
+//>> Goods(ITEM)
+extern int GoodsOnDemand[NUM_SALESMAN];
+extern Condition* GoodsNotEnoughCV[NUM_ITEM];
+extern Lock* GoodsLock[NUM_ITEM];
+extern Lock FreeGoodsLoaderLock;
+extern int GoodsLoaderStatus[NUM_GOODSLOADER];
+extern int SalesmanWaitingLineCount;
+extern Condition FreeGoodsLoaderCV;
+extern Lock *GoodsLoaderLock[NUM_GOODSLOADER];
+extern Condition *GoodsLoaderCV[NUM_GOODSLOADER];
+extern int ImSalesmanNumber[NUM_GOODSLOADER];
+extern int ImGoodsLoaderNumber[NUM_SALESMAN];
 
+//<< Goods(ITEM)
 //----------------------------------------------------------------------------------
 
 //>> Variables for Cust_Sales
@@ -96,6 +104,7 @@ extern Condition *SalesmanCV[NUM_SALESMAN];
 extern int ImCustNumber[NUM_SALESMAN];
 extern int WhoImTalkingTo[NUM_SALESMAN];
 
+//<< Variables for Cust_Sales
 
 //----------------------------------------------------------------------------------
 
