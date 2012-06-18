@@ -2,7 +2,7 @@
 
 #include "SupermarketSimulation.h"
 
-MCC_DebugName_T MCC_DebugName = Manager_Cust_Cashier;
+MCC_DebugName_T MCC_DebugName = Test_Cust_Sales;
 
 // Cust
 Lock CustToManagerLock("CustToManagerLock");

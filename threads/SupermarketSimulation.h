@@ -13,7 +13,7 @@ using namespace std;
 
 // define constants
 #define NUM_SALESMAN 3
-#define NUM_CUSTOMER 8 // for test
+#define NUM_CUSTOMER 2 // for test
 #define NUM_CASHIER 3
 #define NUM_ITEM 10
 #define MAX_ITEM 4
@@ -51,13 +51,13 @@ extern float TotalAmount;
 //----------------------------------------------------------------------------------
 static int CustShoppingLists[NUM_CUSTOMER][NUM_ITEM] = {
     {1, 1, 5, 3, 2, 2, 4, 4, 3, 1},  // Cust 0: 13.00
-    {1, 5, 5, 1, 5, 5, 0, 3, 0, 4},  // Cust 1: 14.50
-    {2, 3, 2, 4, 4, 0, 1, 0, 4, 5},  // Cust 2: 12.50
-    {2, 3, 5, 2, 4, 2, 5, 5, 1, 2},  // Cust 3: 15.50
-    {1, 1, 5, 3, 2, 2, 4, 4, 3, 1},  // Cust 4: 13.00
-    {3, 0, 0, 0, 3, 2, 5, 4, 5, 5},  // Cust 5: 13.50
-    {4, 3, 1, 4, 3, 2, 4, 1, 1, 2},  // Cust 6: 12.50
-    {3, 2, 4, 4, 3, 2, 4, 0, 1, 5}   // Cust 7: 14.00
+    {1, 5, 5, 1, 5, 5, 0, 3, 0, 4}  // Cust 1: 14.50
+//    {2, 3, 2, 4, 4, 0, 1, 0, 4, 5},  // Cust 2: 12.50
+//    {2, 3, 5, 2, 4, 2, 5, 5, 1, 2},  // Cust 3: 15.50
+//    {1, 1, 5, 3, 2, 2, 4, 4, 3, 1},  // Cust 4: 13.00
+//    {3, 0, 0, 0, 3, 2, 5, 4, 5, 5},  // Cust 5: 13.50
+//    {4, 3, 1, 4, 3, 2, 4, 1, 1, 2},  // Cust 6: 12.50
+//    {3, 2, 4, 4, 3, 2, 4, 0, 1, 5}   // Cust 7: 14.00
 };
 extern int TotalItems[NUM_ITEM];
 
