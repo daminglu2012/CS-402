@@ -260,9 +260,9 @@ void GoodsLoader(int ind) {
             //      << GoodsOnDemand[ImSalesmanNumber[ind]]
             //      << "]" << endl;
             
-            for (int j = 0; j < 10; j++) {
-                currentThread->Yield();
-            }
+            // for (int j = 0; j < 10; j++) {
+            //     currentThread->Yield();
+            // }
 
             if (StockRoomWaitingLineCount > 0) {
                 StockRoomWaitingLineCount--;
@@ -326,7 +326,7 @@ void GoodsLoader(int ind) {
             }
 
             SalesmanLock[mySalesInd]->Acquire();
-            ImCustNumber[mySalesInd] = ind;
+            ImGoodsLoaderNumber[mySalesInd] = ind;
             WhoImTalkingTo[mySalesInd] = 2; // I am Goods Loader
             // cout << "GoodsLoader [" << ind 
             //      << "] is interacting with DepartmentSalesman [" << mySalesInd 
