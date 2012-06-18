@@ -146,6 +146,9 @@ void Cashier(int CashierIndex){
         	printf("Cashier [%d] asks Customer [%d] to pay [%.2f]\n",
                CashierIndex, CurCustID, CustTotal);//Correct!
 
+			TotalAmountLock.Acquire();
+			TotalAmount += CustTotal;
+			TotalAmountLock.Release();
             // The Cashier signals the Customer, who is asleep waiting for
             // Cashier to scan his items and tell him the total amount
     		EachCashierScanItemCV[CashierIndex]->Signal(EachCashierScanItemLock[CashierIndex]);

@@ -18,12 +18,22 @@ Condition* WaitForCheckCV;//Cust
 int InsufCustCount = 0;
 int NumCashierOnBreak = 0;
 
+Lock TotalAmountLock("TotalAmountLock");
+float TotalAmount = 0.0;
+float PrevTotal = TotalAmount; // local
+
 void CalBill(int CustID);
 
 void Manager(int ManagerID){
 	while(true){
+		if(PrevTotal!=TotalAmount){
+			printf("Manager reports current total is [%.2f]\n",TotalAmount);
+			PrevTotal = TotalAmount;
+		}
+
 		if(FinishedCust>=NUM_CUSTOMER){
-			printf("\n ! MANAGER: All customers finished shopping, let's call it a day :)\n\n");
+			printf("\n ! MANAGER: All customers finished shopping, let's call it a day :)\n");
+			printf("\n ! MANAGER: We've sold a total of [%.2f]\n\n",TotalAmount);
 			break;
 		}
 		//printf("Manager One Iter\n");
@@ -64,7 +74,9 @@ void Manager(int ManagerID){
 				WaitForCheckCV->Wait(&CustToManagerLock);
 			}
 			printf("  Cust [%d] can afford the bill, done!\n ", CurInsufCustID);
-
+			TotalAmountLock.Acquire();
+			TotalAmount += CustDataArr[CurInsufCustID]->BillAmount;
+			TotalAmountLock.Release();
 			CustToManagerLock.Release();
 		}else{
 			CashierToManagerLock.Release();
