@@ -9,7 +9,7 @@
 
 // define constants
 #define NUM_SALESMAN 	3
-#define NUM_CUSTOMER 	2
+#define NUM_CUSTOMER 	4
 #define NUM_GOODSLOADER 3
 #define NUM_ITEMS	 	5
 #define MAX_ITEM		3
