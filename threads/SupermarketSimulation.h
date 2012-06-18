@@ -17,7 +17,7 @@ using namespace std;
 #define NUM_CASHIER 3
 #define NUM_ITEM 10
 #define MAX_ITEM 4
-#define  NUM_GOODSLOADER 4
+#define NUM_GOODSLOADER 4
 
 //>> DEBUG Options
 /*

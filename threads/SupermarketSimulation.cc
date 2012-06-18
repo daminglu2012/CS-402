@@ -186,26 +186,42 @@ void RunSupermarketSimulation(){
 
     //>> Test Sale_Cust
     if(ManagerCustCashierDebugMode && MCC_DebugName==Test_Cust_Sales){
-        printf("Test Cust_Sales\n\n");
+        printf("\nTest Everything \n\n");
         printf("NUM_CUSTOMER = %d\n",NUM_CUSTOMER);
         printf("NUM_SALESMAN = %d\n",NUM_SALESMAN);
+        printf("NUM_GOODSLOADER = %d\n",NUM_GOODSLOADER);
+        printf("NUM_CASHIER = %d\n",NUM_CASHIER);
+        printf("And the MANAGER\n\n");
 
+        //Customer
         for(i=0; i<NUM_CUSTOMER; i++){
             sprintf(name, "Customer_%d", i);
             t = new Thread(name);
             t->Fork((VoidFunctionPtr)Customer,i);
         }
-
+        //Salesman
         for(i=0; i<NUM_SALESMAN; i++){
             sprintf(name, "Salesman_%d", i);
             t = new Thread(name);
             t->Fork((VoidFunctionPtr)Salesman,i);
         }
+        //Goodsloader
         for(i=0; i<NUM_GOODSLOADER; i++){
             sprintf(name, "GOODSLOADER_%d", i);
             t = new Thread(name);
             t->Fork((VoidFunctionPtr)GoodsLoader,i);
         }
+        //Cashier
+        for(i=0; i<NUM_CASHIER; i++){
+            sprintf(name, "CASHIER_%d", i);
+            t = new Thread(name);
+            t->Fork((VoidFunctionPtr)Cashier,i);
+        }
+        //Manager
+        sprintf(name, "Manager");
+        t = new Thread(name);
+        t->Fork((VoidFunctionPtr)Manager, 0);
+
     }
     //<< Test Sales_Cust
 

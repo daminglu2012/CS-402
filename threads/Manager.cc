@@ -33,7 +33,7 @@ void Manager(int ManagerID){
 			//>>
 			InsufCustCount++;
 			if(InsufCustCount%2==1){
-				// odd : break Cashier[1]
+				//  odd : break Cashier[1]
 				printf("\tManager sets Cashier 1 on break\n");
 	        	CashierOnBreakLock.Acquire();
 				CashierIsOnBreak[1] = true;
