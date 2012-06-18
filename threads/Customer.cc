@@ -85,6 +85,7 @@ void Customer(int CustID) {
 		//>> Interacts with Cashiers
 		// Assume Cust k has got all the items on his list CustShoppingLists[k][10]
 		// Assume every Cust has enough money
+		loop: // not that good
 		if (CustDataArr[CustID]->CustRole == PRIVILEGE) {
 			PrvlCustLineLock.Acquire();
 		} else {
@@ -120,6 +121,12 @@ void Customer(int CustID) {
 				// My Cashier finally calls me
 				EachCashierIsBusy[MyCashierNum] = true; // dupli on purpose
 			}
+		}
+
+		if(CashierIsOnBreak[MyCashierNum]) {
+			printf("RELINE Cust[%d]'s Cashier is on break, re-line up!!!\n",
+					CustID);
+			goto loop;
 		}
 
 		// After acquiring my Cashier's lock, we release the Line Lock

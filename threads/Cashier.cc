@@ -30,8 +30,35 @@ float CurCustTotal[NUM_CASHIER];
 Lock* EachCashierScanItemLock[NUM_CASHIER];
 Condition* EachCashierScanItemCV[NUM_CASHIER];
 
+bool CashierIsOnBreak[NUM_CASHIER];
+Lock CashierOnBreakLock("CashierOnBreakLock");
+Condition CashierOnBreakCV("CashierOnBreakCV");
+
+
 void Cashier(int CashierIndex){
     while(true){
+        // check if I am set on break
+    	CashierOnBreakLock.Acquire();
+        if(CashierIsOnBreak[CashierIndex]){
+        	printf("Cashier [%d] is going on break\n",CashierIndex);
+        	EachCashierPrvlLineCV[CashierIndex]->Broadcast(&PrvlCustLineLock);
+        	EachCashierPrvLen[CashierIndex]=0;
+
+			EachCashierLineCV[CashierIndex]->Broadcast(&CustToCashierLineLock);
+        	EachCashierRegLen[CashierIndex]=0;
+
+            EachCashierLineLength[CashierIndex]=0;
+
+        	printf("@ Cashier[%d] on break\n",CashierIndex);
+        	CashierOnBreakCV.Wait(&CashierOnBreakLock);
+        	printf("@ Cashier[%d] back from break\n",CashierIndex);
+
+        	continue;
+        }else{
+        	printf("~ Cashier[%d] starts working\n",CashierIndex);
+        }
+        CashierOnBreakLock.Release();
+
     	PrvlCustLineLock.Acquire();
     	bool hasPrivilge = false;
         if(EachCashierPrvLen[CashierIndex]>0){
@@ -90,6 +117,7 @@ void Cashier(int CashierIndex){
 		// wakes up one Customer and puts him on the
 		// Ready Queue
         EachCashierScanItemCV[CashierIndex]->Wait(EachCashierScanItemLock[CashierIndex]);
+
         int CurCustID = CustIDforEachCashier[CashierIndex];
 
         // Now Cashier starts scanning items
@@ -131,9 +159,10 @@ void Cashier(int CashierIndex){
 
 int FindShortestCashierLine(int ECLineLength[], int N){
     assert(N>=1);
-    int ShortestLength = ECLineLength[0];
-    int ShortestIndex = 0;
-    for(int i=1; i<N; i++){
+    int ShortestLength = NUM_CUSTOMER+1;
+    int ShortestIndex = -1;
+    for(int i=0; i<N; i++){
+    	if(CashierIsOnBreak[i])continue;
         if(ECLineLength[i]<ShortestLength){
             ShortestLength = ECLineLength[i];
             ShortestIndex = i;

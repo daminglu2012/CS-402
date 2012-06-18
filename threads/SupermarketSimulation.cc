@@ -20,7 +20,7 @@ void RunSupermarketSimulation(){
 		CustomerData* CurNew = (CustomerData*)malloc(sizeof(CustomerData));
 		CurNew->CustID = i;
 		CurNew->BillAmount = 0.0;
-		CurNew->CashAmount = 13.00;
+		CurNew->CashAmount = 12.00;
 		CurNew->InsufMoney = false;
 
 		// Test Privilege
@@ -58,6 +58,7 @@ void RunSupermarketSimulation(){
 
     //>> Init Cashier
 	for(i=0; i<NUM_CASHIER; i++){
+		CashierIsOnBreak[i] = false;
 		sprintf(name, "EachCashierLineCV_%d", i);
 		EachCashierLineCV[i] = new Condition(name);
 
