@@ -16,7 +16,7 @@ using namespace std;
 #define NUM_CUSTOMER 4 // for test
 #define NUM_CASHIER 2
 #define NUM_ITEM 10
-#define MAX_ITEM 100
+#define MAX_ITEM 4
 #define  NUM_GOODSLOADER 4
 
 //>> DEBUG Options
@@ -48,7 +48,7 @@ extern Lock CustWaitingLock;
 
 //----------------------------------------------------------------------------------
 static int CustShoppingLists[NUM_CUSTOMER][NUM_ITEM] = {
-    {1, 5, 2, 1, 3, 5, 2, 0, 1, 4},  // Cust 0: 12.00
+    {1, 1, 1, 1, 1, 1, 1, 0, 2, 1},  // Cust 0: 12.00
     {1, 5, 5, 1, 5, 5, 0, 3, 0, 4},  // Cust 1: 14.50
     {2, 3, 2, 4, 4, 0, 1, 0, 4, 5},  // Cust 2: 12.50
     {2, 3, 5, 2, 4, 2, 5, 5, 1, 2}   // Cust 3: 15.50
@@ -57,10 +57,7 @@ static int CustShoppingLists[NUM_CUSTOMER][NUM_ITEM] = {
 //    {4, 3, 1, 4, 3, 2, 4, 1, 1, 2},  // Cust 6: 12.50
 //    {3, 2, 4, 4, 3, 2, 4, 0, 1, 5}   // Cust 7: 14.00
 };
-static int TotalItems[NUM_ITEM] = {
- MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM,
- MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM
-};
+extern int TotalItems[NUM_ITEM];
 
 enum CustRole_T { REGULAR, PRIVILEGE, COMPLAIN, RESTOCK };
 
@@ -154,6 +151,7 @@ void Salesman(int id);
 void Customer(int id);
 void Cashier(int id);
 void Manager(int id);
+void GoodsLoader(int id);
 //----------------------------------------------------------------------------------
 // this is our 'main' entrance
 extern void RunSupermarketSimulation();

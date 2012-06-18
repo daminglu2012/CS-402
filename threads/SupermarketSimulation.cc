@@ -200,6 +200,11 @@ void RunSupermarketSimulation(){
             t = new Thread(name);
             t->Fork((VoidFunctionPtr)Salesman,i);
         }
+        for(i=0; i<NUM_GOODSLOADER; i++){
+            sprintf(name, "GOODSLOADER_%d", i);
+            t = new Thread(name);
+            t->Fork((VoidFunctionPtr)GoodsLoader,i);
+        }
     }
     //<< Test Sales_Cust
 

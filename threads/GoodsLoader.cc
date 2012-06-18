@@ -25,6 +25,11 @@ bool GoodsIsFull[NUM_ITEM] = {
 		false, false, false, false, false
 };
 
+int TotalItems[NUM_ITEM] = {
+	MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM,
+	MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM
+};
+
 Lock StockRoomLock("StockRoomLock");
 Condition StockRoomCV("StockRoomCV");
 
@@ -73,6 +78,9 @@ void GoodsLoader(int ind) {
             // TotalItems[GoodsOnDemand[ImSalesmanNumber[ind]]]++;
             GoodsLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Release();
 
+            printf("GL[%d]: Salesman [%d] told me Item [%d] needs reload\n",
+            		ind,ImSalesmanNumber[ind], GoodsOnDemand[ImSalesmanNumber[ind]]);
+
             StockRoomLock.Acquire();
 
             if (StockRoomWaitingLineCount == 0) {
@@ -119,7 +127,7 @@ void GoodsLoader(int ind) {
 		cout << "GoodsLoader [" << ind
 			 << "] has restocked [" << GoodsOnDemand[ImSalesmanNumber[ind]]
 			 << "] in Department [1]" << endl;
-
+		ImGoodsLoaderNumber[ImSalesmanNumber[ind]] = ind;
 		// Load Goods Done!
 
 		/* Go to Cust Waiting Line to inform FREE salesman that the [item] is ready */
