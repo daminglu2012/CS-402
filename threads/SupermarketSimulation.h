@@ -9,7 +9,7 @@
 
 // define constants
 #define NUM_SALESMAN 	3
-#define NUM_CUSTOMER 	4
+#define NUM_CUSTOMER 	5
 #define NUM_GOODSLOADER 3
 #define NUM_ITEMS	 	5
 #define MAX_ITEM		3
@@ -24,7 +24,7 @@ extern Lock *SalesmanLock[NUM_SALESMAN];
 extern Condition *SalesmanCV[NUM_SALESMAN];
 
 extern Lock *GoodsLock[NUM_ITEMS];
-extern Lock *GoodsIsFullLock[NUM_ITEMS];
+extern Lock *GoodsLoadingLock[NUM_ITEMS];
 extern Condition *GoodsNotEnoughCV[NUM_ITEMS];
 
 extern Lock FreeGoodsLoaderLock;

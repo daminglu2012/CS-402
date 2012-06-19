@@ -37,6 +37,7 @@ void RunSupermarketSimulation(){
     for (int i = 0; i < NUM_ITEMS; i++) {
         char index = (char)i;
         GoodsLock[i] = new Lock(strcat("GoodsLock#", &index));
+        GoodsLoadingLock[i] = new Lock(strcat("GoodsLoadingLock", &index));
         GoodsNotEnoughCV[i] = new Condition(strcat("GoodsCV#", &index));
     }
 
