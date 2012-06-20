@@ -24,6 +24,12 @@ int WhoImTalkingTo[NUM_SALESMAN];
 void Salesman(int ind) {
     bool allBusy = true;
     while (true) {
+		FinishedCustLock.Acquire();
+		if(FinishedCust>=NUM_CUSTOMER){
+			return;
+		}
+		FinishedCustLock.Release();
+
         CustWaitingLock.Acquire();
         if (CustWaitingLineCount > 0) {
             CustWaitingCV.Signal(&CustWaitingLock);

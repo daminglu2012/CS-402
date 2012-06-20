@@ -2,7 +2,7 @@
 
 #include "SupermarketSimulation.h"
 
-MCC_DebugName_T MCC_DebugName = Test_Cust_Sales;
+MCC_DebugName_T MCC_DebugName = Manager_Cust_Cashier;
 
 // Cust
 Lock CustToManagerLock("CustToManagerLock");
@@ -27,15 +27,19 @@ void CalBill(int CustID);
 void Manager(int ManagerID){
 	while(true){
 		if(PrevTotal!=TotalAmount){
-			printf("Manager reports current total is [%.2f]\n",TotalAmount);
+			printf("Manager reports current total is [%.2f], after [%d] Customers finished shopping\n",
+					TotalAmount, FinishedCust);
 			PrevTotal = TotalAmount;
 		}
 
+		FinishedCustLock.Acquire();
 		if(FinishedCust>=NUM_CUSTOMER){
 			printf("\n ! MANAGER: All customers finished shopping, let's call it a day :)\n");
 			printf("\n ! MANAGER: We've sold a total of [%.2f]\n\n",TotalAmount);
-			break;
+			return;
 		}
+		FinishedCustLock.Release();
+
 		//printf("Manager One Iter\n");
 		CashierToManagerLock.Acquire();
 		if(NumWaitingCashier>0){
@@ -44,18 +48,19 @@ void Manager(int ManagerID){
 			InsufCustCount++;
 			if(InsufCustCount%2==1){
 				//  odd : break Cashier[1]
-				printf("\tManager sets Cashier 1 on break\n");
 	        	CashierOnBreakLock.Acquire();
+				printf("\tManager sets Cashier 1 on break\n");
 				CashierIsOnBreak[1] = true;
 				CashierIsOnBreak[2] = false;
+	        	CashierOnBreakCV.Signal(&CashierOnBreakLock);
 	        	CashierOnBreakLock.Release();
 			}else{
 				// even : break Cashier[2]
-				printf("\tManager sets Cashier 2 on break\n");
 	        	CashierOnBreakLock.Acquire();
-	        	CashierOnBreakCV.Signal(&CashierOnBreakLock);
+				printf("\tManager sets Cashier 2 on break\n");
 	        	CashierIsOnBreak[1] = false;
 	        	CashierIsOnBreak[2] = true;
+	        	CashierOnBreakCV.Signal(&CashierOnBreakLock);
 	        	CashierOnBreakLock.Release();
 			}
 			//<<

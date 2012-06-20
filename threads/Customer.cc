@@ -19,6 +19,8 @@ Lock TrollyLock("OneTrollyLock");
 
 CustDebugModeName_T CustDebugModeName = Cust_Cashier;
 
+Lock FinishedCustLock("FinishedCustLock");
+
 void RemoveOneItem(int CustID);
 
 void Customer(int CustID) {
@@ -175,7 +177,9 @@ void Customer(int CustID) {
 
 		EachCashierScanItemLock[MyCashierNum]->Release();
 		printf("  Cust [%d] DONE!\n", CustID);
+		FinishedCustLock.Acquire();
 		FinishedCust++;
+		FinishedCustLock.Release();
 		//printf("FinishedCust == %d",FinishedCust);
 	}
 	//<< Interacts with Cashier
@@ -414,9 +418,10 @@ void Customer(int CustID) {
 		}
 
 		EachCashierScanItemLock[MyCashierNum]->Release();
-		printf("  Cust [%d] DONE!\n", CustID);
+		printf(" CUSTOMER: Cust [%d] DONE!\n", CustID);
+		FinishedCustLock.Acquire();
 		FinishedCust++;
-		//printf("FinishedCust == %d",FinishedCust);
+		FinishedCustLock.Release();		//printf("FinishedCust == %d",FinishedCust);
 
 	}
 	//<< First test interactions between Cust and Sales

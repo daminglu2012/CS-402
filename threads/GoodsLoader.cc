@@ -42,6 +42,12 @@ int ImGoodsLoaderNumber[NUM_SALESMAN];
 void GoodsLoader(int ind) {
 
     while (1) {
+		FinishedCustLock.Acquire();
+		if(FinishedCust>=NUM_CUSTOMER){
+			return;
+		}
+		FinishedCustLock.Release();
+
         FreeGoodsLoaderLock.Acquire();
 
         if (SalesmanWaitingLineCount > 0) {

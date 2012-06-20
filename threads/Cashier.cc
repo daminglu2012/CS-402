@@ -37,6 +37,11 @@ Condition CashierOnBreakCV("CashierOnBreakCV");
 
 void Cashier(int CashierIndex){
     while(true){
+		FinishedCustLock.Acquire();
+		if(FinishedCust>=NUM_CUSTOMER){
+			return;
+		}
+		FinishedCustLock.Release();
         // check if I am set on break
     	CashierOnBreakLock.Acquire();
         if(CashierIsOnBreak[CashierIndex]){
