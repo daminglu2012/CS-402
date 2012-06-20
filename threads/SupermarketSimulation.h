@@ -25,6 +25,7 @@ extern Condition *SalesmanCV[NUM_SALESMAN];
 
 extern Lock *GoodsLock[NUM_ITEMS];
 extern Lock *GoodsLoadingLock[NUM_ITEMS];
+extern Lock *TotalItemsLock[NUM_ITEMS];
 extern Condition *GoodsNotEnoughCV[NUM_ITEMS];
 
 extern Lock FreeGoodsLoaderLock;
@@ -52,7 +53,7 @@ extern int ImCustNumber[NUM_SALESMAN];
 extern int ImGoodsLoaderNumer[NUM_SALESMAN];
 extern int ImSalesmanNumber[NUM_GOODSLOADER];
 extern int GoodsOnDemand[NUM_SALESMAN];
-// extern int GoodsOnDemandNum[NUM_ITEMS];
+extern int isBeingLoaded[NUM_ITEMS];
 extern int TotalItems[NUM_ITEMS];
 extern float ItemPrices[NUM_ITEMS];
 

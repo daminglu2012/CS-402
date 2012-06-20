@@ -18,6 +18,7 @@ using namespace std;
 
 Lock *GoodsLock[NUM_ITEMS];
 Lock *GoodsLoadingLock[NUM_ITEMS];
+Lock *TotalItemsLock[NUM_ITEMS];
 Condition *GoodsNotEnoughCV[NUM_ITEMS];
 
 Lock CustWaitingLock("CustWaitingLock");
@@ -38,7 +39,7 @@ Condition *SalesmanCV[NUM_SALESMAN];
 
 int TotalItems[NUM_ITEMS] = {MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM, MAX_ITEM}; // not scalable
 int GoodsOnDemand[NUM_SALESMAN];
-// int GoodsOnDemandNum[NUM_ITEMS] = {0, 0, 0, 0, 0};
+int isBeingLoaded[NUM_ITEMS] = {0, 0, 0, 0, 0};
 int WhoImTalkingTo[NUM_SALESMAN];
 int ImCustNumber[NUM_SALESMAN];
 int ImGoodsLoaderNumber[NUM_SALESMAN];
@@ -112,7 +113,6 @@ void CustomerShopping(int ind) {
         }
 
         GoodsLock[i]->Acquire();
-
         // Not Enough Goods,
         // First go to waiting line to wait to see Salesman
         while (ShoppingList[i] > TotalItems[i]) {
@@ -172,6 +172,7 @@ void CustomerShopping(int ind) {
             WhoImTalkingTo[mySalesInd] = 1; // I am complainting customer
             ImCustNumber[mySalesInd] = ind; // my index is ind
             GoodsOnDemand[mySalesInd] = i; // ith goods are out of stock
+            // GoodsOnDemandNum[i] = (TotalItems[i] - ShoppingList[i]); // How many ith goods I still need
 
             cout << "Customer [" << ind
                  << "] is asking for assistance about restocking of [" 
@@ -184,11 +185,10 @@ void CustomerShopping(int ind) {
             SalesmanLock[mySalesInd]->Release();
 
             GoodsNotEnoughCV[i]->Wait(GoodsLock[i]);
-            cout << "Customer [" << ind << "] has received assistance about restocking [" << i << "]" << endl;
-            // cout << "Customer [" << ind 
-            //      << "] has received assistance about restocking ["
-            //      << i << "] from DepartmentSalesman [" 
-            //      << mySalesInd << "]" << endl;      
+            cout << "Customer [" << ind 
+                 << "] has received assistance about restocking ["
+                 << i << "] from DepartmentSalesman [" 
+                 << mySalesInd << "]" << endl;      
         }
 
         TotalItems[i] -= ShoppingList[i];
@@ -227,21 +227,18 @@ void GoodsLoader(int ind) {
              << "] of Department [1] to restock [" 
              << GoodsOnDemand[ImSalesmanNumber[ind]] << "]" << endl;
         GoodsLoaderCV[ind]->Signal(GoodsLoaderLock[ind]);
-        // cout << "GoodsLoader [" << ind << "] responds to DepartmentSalesman [" << ImSalesmanNumber[ind] << "]: Roger That" << endl;
         GoodsLoaderLock[ind]->Release();
 
-        // Load Goods
-        GoodsLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Acquire();
+        // Im going to Load Goods
         for (int i = 0; i < MAX_ITEM; i++) {
-            // GoodsLoadingLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Acquire();
+            GoodsLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Acquire();
             if (TotalItems[GoodsOnDemand[ImSalesmanNumber[ind]]] == MAX_ITEM) {
-                // GoodsLoadingLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Release();
+                GoodsLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Release();
                 break;
             }
-            // GoodsLoadingLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Release();
+            GoodsLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Release();
 
             StockRoomLock.Acquire();
-
             if (StockRoomWaitingLineCount == 0) {
                 WhoIsInTheStockRoom = ind;
             } else {
@@ -258,84 +255,69 @@ void GoodsLoader(int ind) {
                 StockRoomWaitingLineCount--;
                 StockRoomCV.Signal(&StockRoomLock);
             }
-
+            
             StockRoomLock.Release();
 
-            // GoodsLoadingLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Acquire();
+            GoodsLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Acquire();
             cout << "GoodsLoader [" << ind << "] leaves StockRoom" << endl;
             for (int j = 0; j < 10; j++) {
                 currentThread->Yield();
             }
             TotalItems[GoodsOnDemand[ImSalesmanNumber[ind]]]++;
-            if (TotalItems[GoodsOnDemand[ImSalesmanNumber[ind]]] == MAX_ITEM) {
-                cout << "GoodsLoader [" << ind
-                     << "] has restocked [" << GoodsOnDemand[ImSalesmanNumber[ind]] 
-                     << "] in Department [1]" << endl;            
-        
-                // GoodsLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Acquire();
-                // cout << "DepartmentSalesman [" << ind 
-                //      << "] informs the Customer [" 
-                //      << ImCustNumber[ind] << "] that [" 
-                //      << GoodsOnDemand[ind] << "] is restocked" << endl;
-                GoodsNotEnoughCV[GoodsOnDemand[ind]]->Broadcast(GoodsLock[GoodsOnDemand[ImSalesmanNumber[ind]]]);
-                // GoodsLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Release();
-                // GoodsLoadingLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Release();
+            GoodsLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Release();
+        }
+        // Load Goods Done!
+
+        // Go to Cust Waiting Line to inform FREE salesman that the [item] is ready 
+        cout << "GoodsLoader [" << ind
+             << "] has restocked [" << GoodsOnDemand[ImSalesmanNumber[ind]] 
+             << "] in Department [1]" << endl;            
+    
+        CustWaitingLock.Acquire();
+
+        bool allBusy = true;
+        for (int j = 0; j < NUM_SALESMAN; j++) {
+            if (SalesmenStatus[j] == 0) { // if one salesman is FREE
+                allBusy = false;
                 break;
             }
-            // cout << "GoodsLoader [" << ind << "] add one item to [" << GoodsOnDemand[ImSalesmanNumber[ind]] << "]" << endl;
-            // GoodsLoadingLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Release();
         }
-        GoodsLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Release();
-        // Load Goods Done!
-/*
-            // Go to Cust Waiting Line to inform FREE salesman that the [item] is ready 
-            CustWaitingLock.Acquire();
 
-            bool allBusy = true;
+        int mySalesInd;
+        if (allBusy) {
+            CustWaitingLineCount++;
+            cout << "GoodsLoader [" << ind
+                 << "] gets in line for the Department [1]"
+                 << endl;
+            CustWaitingCV.Wait(&CustWaitingLock);
             for (int j = 0; j < NUM_SALESMAN; j++) {
-                if (SalesmenStatus[j] == 0) { // if one salesman is FREE
-                    allBusy = false;
+                if (SalesmenStatus[j] == 3) {
+                    SalesmenStatus[j] = 1;
+                    mySalesInd = j;
                     break;
                 }
             }
-
-            int mySalesInd;
-            if (allBusy) {
-                CustWaitingLineCount++;
-                cout << "GoodsLoader [" << ind
-                     << "] gets in line for the Department [1]"
-                     << endl;
-                CustWaitingCV.Wait(&CustWaitingLock);
-                for (int j = 0; j < NUM_SALESMAN; j++) {
-                    if (SalesmenStatus[j] == 3) {
-                        SalesmenStatus[j] = 1;
-                        mySalesInd = j;
-                        break;
-                    }
-                }
-            } else {
-                for (int j = 0; j < NUM_SALESMAN; j++) {
-                    if (SalesmenStatus[j] == 0) {
-                        SalesmenStatus[j] = 1;
-                        mySalesInd = j;
-                        break;
-                    }
+        } else {
+            for (int j = 0; j < NUM_SALESMAN; j++) {
+                if (SalesmenStatus[j] == 0) {
+                    SalesmenStatus[j] = 1;
+                    mySalesInd = j;
+                    break;
                 }
             }
+        }
 
-            SalesmanLock[mySalesInd]->Acquire();
-            ImGoodsLoaderNumber[mySalesInd] = ind;
-            WhoImTalkingTo[mySalesInd] = 2; // I am Goods Loader
-            // cout << "GoodsLoader [" << ind 
-            //      << "] is interacting with DepartmentSalesman [" << mySalesInd 
-            //      << "] of Department [1]" << endl;        
-            SalesmanCV[mySalesInd]->Signal(SalesmanLock[mySalesInd]);
-            CustWaitingLock.Release();
-            SalesmanCV[mySalesInd]->Wait(SalesmanLock[mySalesInd]);
-            // Go back to be a FREE GoodsLoader who waits for the next salesman to inform me
-            SalesmanLock[mySalesInd]->Release();
-        // GoodsLock[GoodsOnDemand[ImSalesmanNumber[ind]]]->Release();
-*/   
+        SalesmanLock[mySalesInd]->Acquire();
+        ImGoodsLoaderNumber[mySalesInd] = ind;
+        WhoImTalkingTo[mySalesInd] = 2; // I am Goods Loader
+        // cout << "GoodsLoader [" << ind 
+        //      << "] is interacting with DepartmentSalesman [" << mySalesInd 
+        //      << "] of Department [1]" << endl;        
+        SalesmanCV[mySalesInd]->Signal(SalesmanLock[mySalesInd]);
+        CustWaitingLock.Release();
+        SalesmanCV[mySalesInd]->Wait(SalesmanLock[mySalesInd]);
+        // Go back to be a FREE GoodsLoader who waits for the next salesman to inform me
+        SalesmanLock[mySalesInd]->Release();
     }
 }
 
@@ -373,53 +355,58 @@ void SalesmanShopping(int ind) {
                 // cout << "DepartmentSalesman [" << ind << "] got Customer [" << ImCustNumber[ind] << "]'s request, Please Wait for my Notification" << endl;
                 SalesmanLock[ind]->Release();
 
-                // Find Available GoodsLoader to restock the item
-                FreeGoodsLoaderLock.Acquire();
+                GoodsLoadingLock[GoodsOnDemand[ind]]->Acquire();
+                if (isBeingLoaded[GoodsOnDemand[ind]] == 0) {
+                    isBeingLoaded[GoodsOnDemand[ind]] = 1;
+                    // Find Available GoodsLoader to restock the item
+                    FreeGoodsLoaderLock.Acquire();
 
-                allBusy = true;
-                for (int j = 0; j < NUM_GOODSLOADER; j++) {
-                    if (GoodsLoaderStatus[j] == 0) {
-                        allBusy = false;
-                        break;
-                    }
-                }
-
-                int myGoodsLoader;
-                if (allBusy) {
-                    SalesmanWaitingLineCount++;
-                    FreeGoodsLoaderCV.Wait(&FreeGoodsLoaderLock);
-                    for (int j = 0; j < NUM_GOODSLOADER; j++) {
-                        if (GoodsLoaderStatus[j] == 3) {
-                            myGoodsLoader = j;
-                            GoodsLoaderStatus[j] = 1;
-                            break;
-                        }
-                    }
-                } else {
+                    allBusy = true;
                     for (int j = 0; j < NUM_GOODSLOADER; j++) {
                         if (GoodsLoaderStatus[j] == 0) {
-                            myGoodsLoader = j;
-                            GoodsLoaderStatus[j] = 1;
+                            allBusy = false;
                             break;
                         }
                     }
-                }
 
-                GoodsLoaderLock[myGoodsLoader]->Acquire();
-                ImSalesmanNumber[myGoodsLoader] = ind;
-                cout << "DepartmentSalesman [" << ind
-                     << "] informs the GoodsLoader [" << myGoodsLoader
-                     << "] that [" << GoodsOnDemand[ind]
-                     << "] is out of stock" << endl;
-                GoodsLoaderCV[myGoodsLoader]->Signal(GoodsLoaderLock[myGoodsLoader]);
-                FreeGoodsLoaderLock.Release();
-                // cout << "DepartmentSalesman [" << ind
-                //      << "] is Waiting for GoodsLoader ["
-                //      << myGoodsLoader << "] to say Roger that" << endl;
-                GoodsLoaderCV[myGoodsLoader]->Wait(GoodsLoaderLock[myGoodsLoader]);
-                GoodsLoaderLock[myGoodsLoader]->Release();
+                    int myGoodsLoader;
+                    if (allBusy) {
+                        SalesmanWaitingLineCount++;
+                        FreeGoodsLoaderCV.Wait(&FreeGoodsLoaderLock);
+                        for (int j = 0; j < NUM_GOODSLOADER; j++) {
+                            if (GoodsLoaderStatus[j] == 3) {
+                                myGoodsLoader = j;
+                                GoodsLoaderStatus[j] = 1;
+                                break;
+                            }
+                        }
+                    } else {
+                        for (int j = 0; j < NUM_GOODSLOADER; j++) {
+                            if (GoodsLoaderStatus[j] == 0) {
+                                myGoodsLoader = j;
+                                GoodsLoaderStatus[j] = 1;
+                                break;
+                            }
+                        }
+                    }
+
+                    GoodsLoaderLock[myGoodsLoader]->Acquire();
+                    ImSalesmanNumber[myGoodsLoader] = ind;
+                    cout << "DepartmentSalesman [" << ind
+                         << "] informs the GoodsLoader [" << myGoodsLoader
+                         << "] that [" << GoodsOnDemand[ind]
+                         << "] is out of stock" << endl;
+                    GoodsLoaderCV[myGoodsLoader]->Signal(GoodsLoaderLock[myGoodsLoader]);
+                    FreeGoodsLoaderLock.Release();
+                    // cout << "DepartmentSalesman [" << ind
+                    //      << "] is Waiting for GoodsLoader ["
+                    //      << myGoodsLoader << "] to say Roger that" << endl;
+                    GoodsLoaderCV[myGoodsLoader]->Wait(GoodsLoaderLock[myGoodsLoader]);
+                    GoodsLoaderLock[myGoodsLoader]->Release();
+
+                }
+                GoodsLoadingLock[GoodsOnDemand[ind]]->Release();
                 break;
-/*
             case 2: // I am talking to Restocking man
                 cout << "DepartmentSalesman [" << ind 
                      << "] is informed by the GoodsLoader [" 
@@ -427,6 +414,10 @@ void SalesmanShopping(int ind) {
                      << GoodsOnDemand[ind] << "] is restocked" << endl;
                 SalesmanCV[ind]->Signal(SalesmanLock[ind]);
                 SalesmanLock[ind]->Release();
+
+                GoodsLoadingLock[GoodsOnDemand[ind]]->Acquire();
+                isBeingLoaded[GoodsOnDemand[ind]] = 0;
+                GoodsLoadingLock[GoodsOnDemand[ind]]->Release();
 
                 // After the salesman is informed by the Goods loader the ith item is ready
                 // he broadcast customers waiting for ith item
@@ -438,8 +429,7 @@ void SalesmanShopping(int ind) {
                 GoodsNotEnoughCV[GoodsOnDemand[ind]]->Broadcast(GoodsLock[GoodsOnDemand[ind]]);
                 
                 GoodsLock[GoodsOnDemand[ind]]->Release();
-                break;
-*/              
+                break;        
         } // end of switch
     } // end of while
 }
