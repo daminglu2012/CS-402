@@ -9,7 +9,7 @@
 
 // define constants
 #define NUM_SALESMAN 	3
-#define NUM_CUSTOMER 	5
+#define NUM_CUSTOMER 	20
 #define NUM_GOODSLOADER 3
 #define NUM_ITEMS	 	5
 #define MAX_ITEM		3
@@ -51,6 +51,7 @@ extern int WhoIsInTheStockRoom;
 extern int WhoImTalkingTo[NUM_SALESMAN];
 extern int ImCustNumber[NUM_SALESMAN];
 extern int ImGoodsLoaderNumer[NUM_SALESMAN];
+extern int GoodsLoaderLoadingGoodsNumber[NUM_SALESMAN];
 extern int ImSalesmanNumber[NUM_GOODSLOADER];
 extern int GoodsOnDemand[NUM_SALESMAN];
 extern int isBeingLoaded[NUM_ITEMS];
