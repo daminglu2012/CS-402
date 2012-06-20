@@ -37,6 +37,8 @@ Condition CashierOnBreakCV("CashierOnBreakCV");
 
 void Cashier(int CashierIndex){
     while(true){
+		printf("Cashier starts a work cycle\n");
+
 		FinishedCustLock.Acquire();
 		if(FinishedCust>=NUM_CUSTOMER){
 			return;

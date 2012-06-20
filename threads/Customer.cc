@@ -176,7 +176,7 @@ void Customer(int CustID) {
 		}
 
 		EachCashierScanItemLock[MyCashierNum]->Release();
-		printf("  Cust [%d] DONE!\n", CustID);
+		printf(" CUSTOMER: Cust [%d] DONE!\n", CustID);
 		FinishedCustLock.Acquire();
 		FinishedCust++;
 		FinishedCustLock.Release();

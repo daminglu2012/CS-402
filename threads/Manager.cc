@@ -23,16 +23,19 @@ float TotalAmount = 0.0;
 float PrevTotal = TotalAmount; // local
 
 void CalBill(int CustID);
-
 void Manager(int ManagerID){
 	while(true){
+		FinishedCustLock.Acquire();
+		printf("Manager starts a work cycle, Finished Cust==[%d]\n",
+				FinishedCust);
+
 		if(PrevTotal!=TotalAmount){
 			printf("Manager reports current total is [%.2f], after [%d] Customers finished shopping\n",
 					TotalAmount, FinishedCust);
 			PrevTotal = TotalAmount;
 		}
 
-		FinishedCustLock.Acquire();
+
 		if(FinishedCust>=NUM_CUSTOMER){
 			printf("\n ! MANAGER: All customers finished shopping, let's call it a day :)\n");
 			printf("\n ! MANAGER: We've sold a total of [%.2f]\n\n",TotalAmount);
@@ -43,6 +46,7 @@ void Manager(int ManagerID){
 		//printf("Manager One Iter\n");
 		CashierToManagerLock.Acquire();
 		if(NumWaitingCashier>0){
+			/*
 			//printf("Manager finds there is waiting cashier\n");
 			//>>
 			InsufCustCount++;
@@ -64,6 +68,7 @@ void Manager(int ManagerID){
 	        	CashierOnBreakLock.Release();
 			}
 			//<<
+			*/
 			CashierWaitingCV->Signal(&CashierToManagerLock);
 			NumWaitingCashier--;
 			CustToManagerLock.Acquire();

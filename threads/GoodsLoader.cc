@@ -42,6 +42,8 @@ int ImGoodsLoaderNumber[NUM_SALESMAN];
 void GoodsLoader(int ind) {
 
     while (1) {
+		printf("GoodsLoader starts a work cycle\n");
+
 		FinishedCustLock.Acquire();
 		if(FinishedCust>=NUM_CUSTOMER){
 			return;

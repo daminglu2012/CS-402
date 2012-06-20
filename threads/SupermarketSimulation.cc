@@ -20,7 +20,7 @@ void RunSupermarketSimulation(){
 		CustomerData* CurNew = (CustomerData*)malloc(sizeof(CustomerData));
 		CurNew->CustID = i;
 		CurNew->BillAmount = 0.0;
-		CurNew->CashAmount = 12.00;
+		CurNew->CashAmount = 13.00;
 		CurNew->InsufMoney = false;
 
 		// Test Privilege

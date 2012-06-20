@@ -24,6 +24,8 @@ int WhoImTalkingTo[NUM_SALESMAN];
 void Salesman(int ind) {
     bool allBusy = true;
     while (true) {
+		printf("Salesman starts a work cycle\n");
+
 		FinishedCustLock.Acquire();
 		if(FinishedCust>=NUM_CUSTOMER){
 			return;
