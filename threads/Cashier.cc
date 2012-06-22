@@ -34,16 +34,17 @@ bool CashierIsOnBreak[NUM_CASHIER];
 Lock CashierOnBreakLock("CashierOnBreakLock");
 Condition CashierOnBreakCV("CashierOnBreakCV");
 
-
 void Cashier(int CashierIndex){
     while(true){
-		printf("Cashier starts a work cycle\n");
+		printf("Cashier [%d] starts a work cycle\n", CashierIndex);
 
 		FinishedCustLock.Acquire();
 		if(FinishedCust>=NUM_CUSTOMER){
 			return;
 		}
 		FinishedCustLock.Release();
+
+		/*
         // check if I am set on break
     	CashierOnBreakLock.Acquire();
         if(CashierIsOnBreak[CashierIndex]){
@@ -57,14 +58,23 @@ void Cashier(int CashierIndex){
             EachCashierLineLength[CashierIndex]=0;
 
         	printf("@ Cashier[%d] on break\n",CashierIndex);
+        	NumCashierOnBreak++;
+        	//ManagerWaitCashierSleep.Signal(&CashierOnBreakLock);
+        	printf("NumCashierOnBreak++ == [%d]\n",NumCashierOnBreak);
         	CashierOnBreakCV.Wait(&CashierOnBreakLock);
+        	NumCashierOnBreak--;
+        	printf("NumCashierOnBreak-- == [%d]\n",NumCashierOnBreak);
+        	if(NumCashierOnBreak==0){
+        		printf("\tNumCashierOnBreak==0\n\n");
+        	//	ManagerWaitCashierWakeUp.Signal(&CashierOnBreakLock);
+        	}
         	printf("@ Cashier[%d] back from break\n",CashierIndex);
-
-        	continue;
+        	CashierOnBreakLock.Release();
         }else{
-        	printf("~ Cashier[%d] starts working\n",CashierIndex);
+        	//printf("~ Cashier[%d] starts working\n",CashierIndex);
+        	CashierOnBreakLock.Release();
         }
-        CashierOnBreakLock.Release();
+		*/
 
     	PrvlCustLineLock.Acquire();
     	bool hasPrivilge = false;
@@ -105,10 +115,12 @@ void Cashier(int CashierIndex){
 				*/
 			}
         }
+        printf("before EachCashierScanItemLock[CashierIndex]->Acquire\n");
         // Acquire this Cashier's lock
 		// We will use this lock to control the interactions between the Customer
 		// and the Cashier
         EachCashierScanItemLock[CashierIndex]->Acquire();
+        printf("after EachCashierScanItemLock[CashierIndex]->Acquire\n");
 
         // After acquiring the above lock, we release the CustToCashierLineLock so who ever is waiting for the
 		// lock can then search for the shortest line and then get into the appropriate line
@@ -123,6 +135,7 @@ void Cashier(int CashierIndex){
 		// Sleeping the Cashier frees up his EachCashierScanItemLock,
 		// wakes up one Customer and puts him on the
 		// Ready Queue
+        printf("EachCashierScanItemCV[CashierIndex]->Wait\n");
         EachCashierScanItemCV[CashierIndex]->Wait(EachCashierScanItemLock[CashierIndex]);
 
         int CurCustID = CustIDforEachCashier[CashierIndex];

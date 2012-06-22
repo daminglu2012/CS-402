@@ -121,11 +121,7 @@ void Customer(int CustID) {
 			}
 		}
 
-		if(CashierIsOnBreak[MyCashierNum]) {
-			printf("RELINE Cust[%d]'s Cashier is on break, re-line up!!!\n",
-					CustID);
-			goto loop1;
-		}
+		EachCashierScanItemLock[MyCashierNum]->Acquire();
 
 		// After acquiring my Cashier's lock, we release the Line Lock
 		// so any Cashier that is waiting for the
@@ -137,7 +133,11 @@ void Customer(int CustID) {
 			CustToCashierLineLock.Release();
 		}
 
-		EachCashierScanItemLock[MyCashierNum]->Acquire();
+		if(CashierIsOnBreak[MyCashierNum]) {
+			printf("RELINE Cust[%d]'s Cashier is on break, re-line up!!!\n",
+					CustID);
+			goto loop1;
+		}
 
 		// 'give' my items to my Cashier
 		CustIDforEachCashier[MyCashierNum] = CustID;

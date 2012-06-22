@@ -22,8 +22,14 @@ Lock TotalAmountLock("TotalAmountLock");
 float TotalAmount = 0.0;
 float PrevTotal = TotalAmount; // local
 
+Condition ManagerWaitCashierWakeUp("ManagerWaitCashierWakeUp");
+Condition ManagerWaitCashierSleep("ManagerWaitCashierSleep");
+
 void CalBill(int CustID);
+
 void Manager(int ManagerID){
+	NumWaitingCashier=0;
+	InsufCustCount = 0;
 	while(true){
 		FinishedCustLock.Acquire();
 		printf("Manager starts a work cycle, Finished Cust==[%d]\n",
@@ -46,6 +52,35 @@ void Manager(int ManagerID){
 		//printf("Manager One Iter\n");
 		CashierToManagerLock.Acquire();
 		if(NumWaitingCashier>0){
+			InsufCustCount++; // add one processed InsufCust
+			// %3==1: Cashier 1 on break
+			// %3==2: Cashier 2 on break
+			// %3==0: Wake up all on break Cashiers
+
+			CashierOnBreakLock.Acquire();
+			switch(InsufCustCount%3){
+			case 1:
+				printf("case 1\n");
+				CashierIsOnBreak[1] = true;
+				//ManagerWaitCashierSleep.Wait(&CashierOnBreakLock);
+				printf("case 1 DONE\n");
+				break;
+			case 2:
+				printf("case 2\n");
+				CashierIsOnBreak[2] = true;
+				//ManagerWaitCashierSleep.Wait(&CashierOnBreakLock);
+				printf("case 2 DONE\n");
+				break;
+			case 0:
+				printf("case 0\n");
+				//CashierOnBreakCV.Broadcast(&CashierOnBreakLock);
+				//ManagerWaitCashierWakeUp.Wait(&CashierOnBreakLock);
+				printf("case 0 DONE\n");
+				break;
+			}
+			CashierOnBreakLock.Release();
+
+
 			/*
 			//printf("Manager finds there is waiting cashier\n");
 			//>>
@@ -56,7 +91,11 @@ void Manager(int ManagerID){
 				printf("\tManager sets Cashier 1 on break\n");
 				CashierIsOnBreak[1] = true;
 				CashierIsOnBreak[2] = false;
-	        	CashierOnBreakCV.Signal(&CashierOnBreakLock);
+				if(NumCashierOnBreak>0){
+					NumCashierOnBreak--;
+					CashierOnBreakCV.Signal(&CashierOnBreakLock);
+					ManagerWaitCashierWakeUp.Wait(&CashierOnBreakLock);
+				}
 	        	CashierOnBreakLock.Release();
 			}else{
 				// even : break Cashier[2]
@@ -64,14 +103,18 @@ void Manager(int ManagerID){
 				printf("\tManager sets Cashier 2 on break\n");
 	        	CashierIsOnBreak[1] = false;
 	        	CashierIsOnBreak[2] = true;
-	        	CashierOnBreakCV.Signal(&CashierOnBreakLock);
-	        	CashierOnBreakLock.Release();
+				if(NumCashierOnBreak>0){
+					NumCashierOnBreak--;
+					CashierOnBreakCV.Signal(&CashierOnBreakLock);
+					ManagerWaitCashierWakeUp.Wait(&CashierOnBreakLock);
+				}
+				CashierOnBreakLock.Release();
 			}
 			//<<
 			*/
-			CashierWaitingCV->Signal(&CashierToManagerLock);
-			NumWaitingCashier--;
 			CustToManagerLock.Acquire();
+			CashierWaitingCV->Signal(&CashierToManagerLock);
+			NumWaitingCashier--;// OK, got u, let the cashier go
 			CashierToManagerLock.Release();
 			printf("Manager waits insuf cust coming\n");
 			InsufCustWaitingCV->Wait(&CustToManagerLock);

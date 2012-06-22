@@ -114,6 +114,10 @@ extern int WhoImTalkingTo[NUM_SALESMAN];
 extern bool CashierIsOnBreak[NUM_CASHIER];
 extern Lock CashierOnBreakLock;
 extern Condition CashierOnBreakCV;
+extern Condition ManagerWaitCashierWakeUp;
+extern Condition ManagerWaitCashierSleep;
+
+extern int NumCashierOnBreak;
 //<< Variables for Cust_Sales
 
 //----------------------------------------------------------------------------------
