@@ -29,7 +29,7 @@ void RemoveOneItem(int CustID);
 
 void Customer(int CustID) {
 	if (ManagerCustCashierDebugMode && MCC_DebugName == Test_Everything) {
-		if(0){
+		if(true){
 	    /****************** Customer Greeting For Goods ******************/
 	    CustWaitingLock.Acquire();
 
@@ -263,10 +263,11 @@ void Customer(int CustID) {
 			while (CustDataArr[CustID]->InsufMoney) {
 				WaitForCheckCV->Wait(&CustToManagerLock);
 				if (CustDataArr[CustID]->InsufMoney) {
-					printf("  still insuf, needs to remove one item\n");
+					printf(" Cust[%d] still insuf, needs to remove one item\n",
+							CustID);
 					RemoveOneItem(CustID);
 				} else {
-					printf("  I can finally afford it! Goodbye! \n");
+					printf(" I can finally afford it! Goodbye! \n");
 					WaitForCheckCV->Signal(&CustToManagerLock);
 					CustToManagerLock.Release();
 					break;
@@ -284,11 +285,11 @@ void Customer(int CustID) {
 		FinishedCustLock.Acquire();
 		DoneCust.push_back(CustID);
 		sort(DoneCust.begin(), DoneCust.end());
-		printf(" CUSTOMER: Cust [%d] DONE! Total DoneCust ", CustID);
-		printf("[%d] : ", DoneCust.size());
-		for(int i=0; i<DoneCust.size(); i++){
-			printf("%d ", DoneCust[i]);
-		}
+		printf(" CUSTOMER: Cust [%d] DONE!  ", CustID);
+		printf(" Total Done Cust == [%d] : ", DoneCust.size());
+//		for(int i=0; i<DoneCust.size(); i++){
+//			printf("%d ", DoneCust[i]);
+//		}
 		printf("\n");
 		FinishedCust++;
 		FinishedCustLock.Release();

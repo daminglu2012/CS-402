@@ -38,15 +38,15 @@ void Manager(int ManagerID){
 		//		FinishedCust);
 
 		if(PrevTotal!=TotalAmount){
-			printf("Manager reports current total is [%.2f], after [%d] Customers finished shopping\n",
-					TotalAmount, FinishedCust);
+			printf("Manager reports current total is [%.2f]\n",
+					TotalAmount);
 			PrevTotal = TotalAmount;
 		}
 
 
 		if(FinishedCust>=NUM_CUSTOMER){
-			printf("\n ! MANAGER: All customers finished shopping, let's call it a day :)\n");
-			printf("\n ! MANAGER: We've sold a total of [%.2f]\n\n",TotalAmount);
+			printf("\n  MANAGER: All customers finished shopping, let's call it a day :)\n");
+			printf("\n  MANAGER: We've sold a total of [%.2f]\n\n",TotalAmount);
 			return;
 		}
 		FinishedCustLock.Release();
@@ -120,15 +120,15 @@ void Manager(int ManagerID){
 			CashierToManagerLock.Release();
 			printf("Manager waits insuf cust coming\n");
 			InsufCustWaitingCV->Wait(&CustToManagerLock);
-			printf("Manager met insuf Cust [%d]\n", CurInsufCustID);
+			printf("Manager meets insuf Cust [%d]\n", CurInsufCustID);
 			while(CustDataArr[CurInsufCustID]->InsufMoney){
 				CalBill(CurInsufCustID);//will also reset InsufMoney if needed!
-				printf("  calc'ed new bill [%.2f], signal cust\n",
-						CustDataArr[CurInsufCustID]->BillAmount);
+				printf(" Manager calc'ed Cust[%d]'s new bill == [%.2f], signal cust\n",
+						CurInsufCustID, CustDataArr[CurInsufCustID]->BillAmount);
 				WaitForCheckCV->Signal(&CustToManagerLock);
 				WaitForCheckCV->Wait(&CustToManagerLock);
 			}
-			printf("  Cust [%d] can afford the bill, done!\n ", CurInsufCustID);
+			printf(" Cust [%d] can afford the bill, done!\n ", CurInsufCustID);
 			TotalAmountLock.Acquire();
 			TotalAmount += CustDataArr[CurInsufCustID]->BillAmount;
 			TotalAmountLock.Release();

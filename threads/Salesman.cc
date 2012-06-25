@@ -49,7 +49,7 @@ void Salesman(int ind) {
 
 		SalesmanLock[ind]->Acquire();
 		CustWaitingLock.Release();
-		printf("Salesman [%d] waits for Customer [X] to come\n", ind);
+		printf("Salesman [%d] waits for the next customer to come\n", ind);
 		SalesmanCV[ind]->Wait(SalesmanLock[ind]); // Wait for customer to come to me
 
 		switch (WhoImTalkingTo[ind]) {

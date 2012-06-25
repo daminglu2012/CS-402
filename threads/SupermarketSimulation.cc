@@ -129,17 +129,17 @@ void RunSupermarketSimulation(){
 
         printf("Don't forget the Manager :) \n\n");
 
-//        for(i=0; i<NUM_SALESMAN; i++){
-//            sprintf(name, "Salesman_%d", i);
-//            t = new Thread(name);
-//            t->Fork((VoidFunctionPtr)Salesman,i);
-//        }
-//
-//        for(i=0; i<NUM_GOODSLOADER; i++){
-//            sprintf(name, "GoodsLoader_%d", i);
-//            t = new Thread(name);
-//            t->Fork((VoidFunctionPtr)GoodsLoader,i);
-//        }
+        for(i=0; i<NUM_SALESMAN; i++){
+            sprintf(name, "Salesman_%d", i);
+            t = new Thread(name);
+            t->Fork((VoidFunctionPtr)Salesman,i);
+        }
+
+        for(i=0; i<NUM_GOODSLOADER; i++){
+            sprintf(name, "GoodsLoader_%d", i);
+            t = new Thread(name);
+            t->Fork((VoidFunctionPtr)GoodsLoader,i);
+        }
 
         for(i=0; i<NUM_CASHIER; i++){
             sprintf(name, "Cashier_%d", i);

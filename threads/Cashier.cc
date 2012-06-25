@@ -115,12 +115,10 @@ void Cashier(int CashierIndex){
 				*/
 			}
         }
-        printf("before EachCashierScanItemLock[CashierIndex]->Acquire\n");
         // Acquire this Cashier's lock
 		// We will use this lock to control the interactions between the Customer
 		// and the Cashier
         EachCashierScanItemLock[CashierIndex]->Acquire();
-        printf("after EachCashierScanItemLock[CashierIndex]->Acquire\n");
 
         // After acquiring the above lock, we release the CustToCashierLineLock so who ever is waiting for the
 		// lock can then search for the shortest line and then get into the appropriate line
@@ -135,7 +133,6 @@ void Cashier(int CashierIndex){
 		// Sleeping the Cashier frees up his EachCashierScanItemLock,
 		// wakes up one Customer and puts him on the
 		// Ready Queue
-        printf("EachCashierScanItemCV[%d]->Wait\n",CashierIndex);
         EachCashierScanItemCV[CashierIndex]->Wait(EachCashierScanItemLock[CashierIndex]);
         EachCashierIsBusy[CashierIndex] = true;//!!!
         int CurCustID = CustIDforEachCashier[CashierIndex];
