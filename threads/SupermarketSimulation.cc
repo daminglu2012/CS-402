@@ -58,11 +58,15 @@ void RunSupermarketSimulation(){
 
     //>> Init Cashier
 	for(i=0; i<NUM_CASHIER; i++){
+		/*
 		if(i==0){
 			CashierIsOnBreak[i] = false;
 		}else{
 			CashierIsOnBreak[i] = true;
 		}
+		*/
+		CashierIsOnBreak[i] = false; // no break
+
 		sprintf(name, "EachCashierLineCV_%d", i);
 		EachCashierLineCV[i] = new Condition(name);
 

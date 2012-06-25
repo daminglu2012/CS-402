@@ -56,7 +56,7 @@ void Manager(int ManagerID){
 			// %3==1: Cashier 1 on break
 			// %3==2: Cashier 2 on break
 			// %3==0: Wake up all on break Cashiers
-
+			/*
 			CashierOnBreakLock.Acquire();
 			switch(InsufCustCount%3){
 			case 1:
@@ -79,7 +79,7 @@ void Manager(int ManagerID){
 				break;
 			}
 			CashierOnBreakLock.Release();
-
+			*/
 
 			/*
 			//printf("Manager finds there is waiting cashier\n");
