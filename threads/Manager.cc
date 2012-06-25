@@ -2,7 +2,7 @@
 
 #include "SupermarketSimulation.h"
 
-MCC_DebugName_T MCC_DebugName = Manager_Cust_Cashier;
+MCC_DebugName_T MCC_DebugName = Test_Everything;
 
 // Cust
 Lock CustToManagerLock("CustToManagerLock");
@@ -25,6 +25,8 @@ float PrevTotal = TotalAmount; // local
 Condition ManagerWaitCashierWakeUp("ManagerWaitCashierWakeUp");
 Condition ManagerWaitCashierSleep("ManagerWaitCashierSleep");
 
+Lock *TotalItemsLock[NUM_ITEM];
+
 void CalBill(int CustID);
 
 void Manager(int ManagerID){
@@ -32,8 +34,8 @@ void Manager(int ManagerID){
 	InsufCustCount = 0;
 	while(true){
 		FinishedCustLock.Acquire();
-		printf("Manager starts a work cycle, Finished Cust==[%d]\n",
-				FinishedCust);
+		//printf("Manager starts a work cycle, Finished Cust==[%d]\n",
+		//		FinishedCust);
 
 		if(PrevTotal!=TotalAmount){
 			printf("Manager reports current total is [%.2f], after [%d] Customers finished shopping\n",

@@ -135,9 +135,9 @@ void Cashier(int CashierIndex){
 		// Sleeping the Cashier frees up his EachCashierScanItemLock,
 		// wakes up one Customer and puts him on the
 		// Ready Queue
-        printf("EachCashierScanItemCV[CashierIndex]->Wait\n");
+        printf("EachCashierScanItemCV[%d]->Wait\n",CashierIndex);
         EachCashierScanItemCV[CashierIndex]->Wait(EachCashierScanItemLock[CashierIndex]);
-
+        EachCashierIsBusy[CashierIndex] = true;//!!!
         int CurCustID = CustIDforEachCashier[CashierIndex];
 
         // Now Cashier starts scanning items

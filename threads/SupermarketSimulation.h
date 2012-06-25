@@ -16,7 +16,7 @@ using namespace std;
 #define NUM_CUSTOMER 32 // for test
 #define NUM_CASHIER 3
 #define NUM_ITEM 10
-#define MAX_ITEM 4
+#define MAX_ITEM 4999
 #define NUM_GOODSLOADER 4
 
 //>> DEBUG Options
@@ -37,7 +37,7 @@ enum MCC_DebugName_T{
 	Manager_Cust_Cashier,
 	Manager_Cust_Cashier_Salesman,
 	Manager_Cust_Cashier_Salesman_GoodsLoader,
-	Test_Cust_Sales
+	Test_Everything
 };
 extern MCC_DebugName_T MCC_DebugName;
 //<< DEBUG Options
@@ -110,7 +110,17 @@ extern Condition *GoodsLoaderCV[NUM_GOODSLOADER];
 extern int ImSalesmanNumber[NUM_GOODSLOADER];
 extern int ImGoodsLoaderNumber[NUM_SALESMAN];
 
+extern int GoodsLoaderLoadingGoodsNumber[NUM_SALESMAN];
+
 //<< Goods(ITEM)
+
+//>> Salesman
+extern Lock *GoodsLoadingLock[NUM_ITEM];
+extern int isBeingLoaded[NUM_ITEM];
+extern Lock *TotalItemsLock[NUM_ITEM];
+
+//<< Salesman
+
 //----------------------------------------------------------------------------------
 
 //>> Variables for Cust_Sales
