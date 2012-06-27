@@ -7,7 +7,7 @@
 
 #include "copyright.h"
 #include "system.h"
-
+#include "machine.h"
 // This defines *all* of the global data structures used by Nachos.
 // These are all initialized and de-allocated by this file.
 
@@ -18,6 +18,8 @@ Interrupt *interrupt;			// interrupt status
 Statistics *stats;			// performance metrics
 Timer *timer;				// the hardware timer device,
 					// for invoking context switches
+BitMap *PhysBitMap;
+Lock PhysBitMapLock("PhysBitMapLock");
 
 #ifdef FILESYS_NEEDED
 FileSystem  *fileSystem;
@@ -136,6 +138,8 @@ Initialize(int argc, char **argv)
     if (randomYield)				// start the timer (if needed)
 	timer = new Timer(TimerInterruptHandler, 0, randomYield);
 
+    PhysBitMap = new BitMap(NumPhysPages); // init unused physical pages
+
     threadToBeDestroyed = NULL;
 
     // We didn't explicitly allocate the current thread we are running in.
@@ -191,7 +195,7 @@ Cleanup()
     delete timer;
     delete scheduler;
     delete interrupt;
-    
+    delete PhysBitMap;
     Exit(0);
 }
 

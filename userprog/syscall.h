@@ -66,7 +66,6 @@ SpaceId Exec(char *name);
  */
 int Join(SpaceId id); 	
  
-
 /* File system operations: Create, Open, Read, Write, Close
  * These functions are patterned after UNIX -- files represent
  * both files *and* hardware I/O devices.
@@ -125,6 +124,21 @@ void Fork(void (*func)());
  * or not. 
  */
 void Yield();		
+
+
+// CreateLock()
+// CreateCV()
+// DeleteLock()
+// DeleteCV()
+// Acquire()
+// Release()
+// Wait()
+// Signal()
+// Broadcast()
+
+// Fork()
+// Exec()
+// Exit()
 
 #endif /* IN_ASM */
 
