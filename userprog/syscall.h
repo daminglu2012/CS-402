@@ -30,6 +30,11 @@
 #define SC_Fork		9
 #define SC_Yield	10
 
+#define SC_CreateLock 	11
+#define SC_DestroyLock 	12
+#define SC_Acquire 		13
+#define SC_Release 		14
+ 
 #define MAXFILENAME 256
 
 #ifndef IN_ASM
@@ -125,6 +130,10 @@ void Fork(void (*func)());
  */
 void Yield();		
 
+int CreateLock(char *LockName, int NameLen);
+void DestroyLcok(int LockId);
+void Acquire(int LockId);
+void Release(int LockId);
 
 // CreateLock()
 // CreateCV()

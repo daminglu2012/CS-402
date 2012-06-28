@@ -18,8 +18,6 @@ Interrupt *interrupt;			// interrupt status
 Statistics *stats;			// performance metrics
 Timer *timer;				// the hardware timer device,
 					// for invoking context switches
-BitMap *PhysBitMap;
-Lock PhysBitMapLock("PhysBitMapLock");
 
 #ifdef FILESYS_NEEDED
 FileSystem  *fileSystem;
@@ -31,6 +29,14 @@ SynchDisk   *synchDisk;
 
 #ifdef USER_PROGRAM	// requires either FILESYS or FILESYS_STUB
 Machine *machine;	// user program memory and registers
+
+BitMap *PhysBitMap;
+Lock PhysBitMapLock("PhysBitMapLock");
+
+MachineLock LockPool[MAX_LOCKS];
+BitMap *LockPoolBitMap;
+Lock LockPoolLock("LockPoolLock");
+
 #endif
 
 #ifdef NETWORK
@@ -138,8 +144,6 @@ Initialize(int argc, char **argv)
     if (randomYield)				// start the timer (if needed)
 	timer = new Timer(TimerInterruptHandler, 0, randomYield);
 
-    PhysBitMap = new BitMap(NumPhysPages); // init unused physical pages
-
     threadToBeDestroyed = NULL;
 
     // We didn't explicitly allocate the current thread we are running in.
@@ -153,6 +157,8 @@ Initialize(int argc, char **argv)
     
 #ifdef USER_PROGRAM
     machine = new Machine(debugUserProg);	// this must come first
+    PhysBitMap = new BitMap(NumPhysPages); // init unused physical pages
+    LockPoolBitMap = new BitMap(MAX_LOCKS);
 #endif
 
 #ifdef FILESYS
@@ -182,6 +188,8 @@ Cleanup()
     
 #ifdef USER_PROGRAM
     delete machine;
+    delete PhysBitMap;
+    delete LockPoolBitMap;
 #endif
 
 #ifdef FILESYS_NEEDED
@@ -195,7 +203,6 @@ Cleanup()
     delete timer;
     delete scheduler;
     delete interrupt;
-    delete PhysBitMap;
     Exit(0);
 }
 

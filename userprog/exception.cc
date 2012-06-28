@@ -231,6 +231,76 @@ void Close_Syscall(int fd) {
     }
 }
 
+int CreateLock_Syscall(unsigned int vaddr, int len) {
+    char *buf = new char [len + 1];
+
+    // input arg validation
+    if (!buf) {
+        printf("%s","Can't allocate kernel buffer in CreateLock\n");
+        return -1;
+    }
+
+    if (copyin(vaddr,len,buf) == -1) {
+        printf("%s","Bad pointer passed to CreateLock\n");
+        delete[] buf;
+        return -1;
+    }
+
+    buf[len]='\0';
+
+    LockPoolLock.Acquire();
+    int nextLockPos = LockPoolBitMap->Find();
+    if (nextLockPos == -1) {
+      printf("%s", "LockPool is full\n");
+      delete[] buf;
+      return -1;
+    }
+    char ind = (char)nextLockPos;
+    LockPool[nextLockPos].lock = new Lock(strcat("Lock#", &ind));
+
+    if (!LockPool[nextLockPos].lock) {
+      printf("%s", "Create Lock fails in CreateLock");
+      delete[] buf;
+      return -1;
+    }
+
+    LockPool[nextLockPos].space = currentThread->space; // lock is in the currentThread's space
+    LockPool[nextLockPos].isDestroyed = false;
+    LockPool[nextLockPos].isToBeDestroyed = false;
+
+    int rv = nextLockPos;
+    LockPoolLock.Release();
+
+    delete[] buf;
+    return rv;
+}
+
+void DestroyLock_Syscall(int LockId) {
+    if (LockId<0 || LockId>MAX_LOCKS) {
+      printf("%s", "LockId is out of boundary");
+      return;
+    }
+
+    LockPoolLock.Acquire();
+    if (LockPool[LockId].lock == NULL) {
+      printf("%s", "Lock is NULL, Cannot be Destroyed again\n");
+      return;
+    }
+
+    if (LockPool[LockId].space != currentThread->space) {
+      printf("%s", "Lock is not in the current process\n");
+      return;
+    }
+
+    // one more case: if the lock is in use, how to 'remember' this destroy request???
+
+    delete LockPool[LockId].lock;
+    LockPool[LockId].lock = NULL;
+    LockPool[LockId].isDestroyed = true;
+    LockPoolBitMap->Clear(LockId);
+    LockPoolLock.Release();
+}
+
 void ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2); // Which syscall?
     int rv=0; 	// the return value from a syscall
@@ -267,6 +337,26 @@ void ExceptionHandler(ExceptionType which) {
 		DEBUG('a', "Close syscall.\n");
 		Close_Syscall(machine->ReadRegister(4));
 		break;
+    // Lock syscall
+      case SC_CreateLock:
+    DEBUG('a', "Create a Lock.\n");
+    rv = CreateLock_Syscall(machine->ReadRegister(4),
+                       machine->ReadRegister(5));
+    break;
+      case SC_DestroyLock:
+    DEBUG('a', "Destroy a Lock.\n");
+    DestroyLock_Syscall(machine->ReadRegister(4));
+    break;
+    //   case SC_Acquire:
+    // DEBUG('a', "Acquire a Lock.\n");
+    // Acquire_Syscall(machine->ReadRegister(4));
+    // break;
+    //   case SC_Release:
+    // DEBUG('a', "Acquire a Lock.\n");
+    // Release_Syscall(machine->ReadRegister(4));
+    // break;
+
+    // CV syscall: TO Be Continued...
 	}
 
 	// Put in the return value and increment the PC
