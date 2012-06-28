@@ -19,6 +19,10 @@ using namespace std;
 #define MAX_ITEM 4999 // :(
 #define NUM_GOODSLOADER 4
 
+extern Lock ReadyLock;
+extern Condition ReadyCV;
+extern bool isReady;
+
 //>> DEBUG Options
 /*
 extern bool CustDebugMode;
@@ -155,6 +159,7 @@ extern float GoodsPrices[10]; // price for those 10 items
 
 extern Lock CustToCashierLineLock;
 extern Lock PrvlCustLineLock;
+extern Lock WholeLine;
 
 extern Condition* EachCashierLineCV[NUM_CASHIER]; // ***
 extern Condition* EachCashierPrvlLineCV[NUM_CASHIER]; // ***

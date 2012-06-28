@@ -28,7 +28,6 @@ void RunSupermarketSimulation(){
 		// Test Privilege
 		if(i%3==0){CurNew->CustRole = PRIVILEGE ;}
 		else{CurNew->CustRole = REGULAR;}
-
 		//CurNew->CustRole = REGULAR;
 		for(int j=0; j<NUM_ITEM; j++){
 			CurNew->ShoppingList[j] = CustShoppingLists[i][j];

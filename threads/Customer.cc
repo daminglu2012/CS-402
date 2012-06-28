@@ -29,7 +29,8 @@ void RemoveOneItem(int CustID);
 
 void Customer(int CustID) {
 	if (ManagerCustCashierDebugMode && MCC_DebugName == Test_Everything) {
-		if(true){
+
+		if(false){
 	    /****************** Customer Greeting For Goods ******************/
 	    CustWaitingLock.Acquire();
 
@@ -186,11 +187,19 @@ void Customer(int CustID) {
 		//>> Interacts with Cashiers
 		// Assume Cust k has got all the items on his list CustShoppingLists[k][10]
 		// Assume every Cust has enough money
-		loop1: // not that good
+
+		WholeLine.Acquire();
+		bool isReleased = false;
+		printf("Cust[%d] holds WholeLine1.\n",CustID);
+
 		if (CustDataArr[CustID]->CustRole == PRIVILEGE) {
 			PrvlCustLineLock.Acquire();
+			printf("Cust[%d] holds PrvlCustLineLock1.\n",CustID);
+
 		} else {
 			CustToCashierLineLock.Acquire();
+			printf("Cust[%d] holds CustToCashierLineLock1.\n",CustID);
+
 		}
 
 		int MyCashierNum = FindShortestCashierLine(EachCashierLineLength,
@@ -198,7 +207,7 @@ void Customer(int CustID) {
 		printf("Customer [%d] chose Cashier [%d] with a line length of [%d]\n",
 				CustID, MyCashierNum, EachCashierLineLength[MyCashierNum]);
 
-		if (EachCashierLineLength[MyCashierNum] > 0
+		if (EachCashierLineLength[MyCashierNum] > 0 // problem, race condition
 				|| EachCashierIsBusy[MyCashierNum]) {
 			EachCashierLineLength[MyCashierNum]++;
 			if (CustDataArr[CustID]->CustRole == PRIVILEGE) {
@@ -208,7 +217,13 @@ void Customer(int CustID) {
 						CustID, MyCashierNum,
 						EachCashierLineLength[MyCashierNum]);
 				EachCashierPrvLen[MyCashierNum]++;
+				printf("Cust[%d] waits Cashier[%d] (Privilege)\n",
+						CustID, MyCashierNum);
+				WholeLine.Release();
+				isReleased = true;
 				EachCashierPrvlLineCV[MyCashierNum]->Wait(&PrvlCustLineLock);
+				printf("Cust[%d]wokeupPrvl\n",CustID);
+				//WholeLine.Acquire();
 				// My Cashier finally calls me
 				EachCashierIsBusy[MyCashierNum] = true; // dupli on purpose
 			} else {
@@ -218,14 +233,22 @@ void Customer(int CustID) {
 						CustID, MyCashierNum,
 						EachCashierLineLength[MyCashierNum]);
 				EachCashierRegLen[MyCashierNum]++;
+				printf("Cust[%d] waits Cashier[%d] (Regular)\n",
+						CustID, MyCashierNum);
+				WholeLine.Release();
+				isReleased = true;
+				printf("Cust[%d] released WholeLine1.\n",CustID);
 				EachCashierLineCV[MyCashierNum]->Wait(&CustToCashierLineLock);
+				printf("Cust[%d]wokeupReg\n",CustID);
+				//WholeLine.Acquire();
+				//printf("Cust[%d] holds WholeLine2.\n",CustID);
 				// My Cashier finally calls me
 				EachCashierIsBusy[MyCashierNum] = true; // dupli on purpose
 			}
 		}
 
 		EachCashierScanItemLock[MyCashierNum]->Acquire();
-
+		EachCashierIsBusy[MyCashierNum] = true;
 		// After acquiring my Cashier's lock, we release the Line Lock
 		// so any Cashier that is waiting for the
 		// Line Lock can call his next Customer
@@ -235,16 +258,15 @@ void Customer(int CustID) {
 		} else {
 			CustToCashierLineLock.Release();
 		}
-
-		if(CashierIsOnBreak[MyCashierNum]) {
-			printf("RELINE Cust[%d]'s Cashier is on break, re-line up!!!\n",
-					CustID);
-			goto loop1;
+		if(!isReleased){
+			WholeLine.Release();
+			printf("Cust[%d] released WholeLine2.\n",CustID);
 		}
+
 
 		// 'give' my items to my Cashier
 		CustIDforEachCashier[MyCashierNum] = CustID;
-		EachCashierIsBusy[MyCashierNum] = true;//!!!
+		//EachCashierIsBusy[MyCashierNum] = true;//!!!
 		printf("Cust %d signals CASHIER %d\n", CustID, MyCashierNum);
 		EachCashierScanItemCV[MyCashierNum]->Signal(
 				EachCashierScanItemLock[MyCashierNum]);
@@ -252,7 +274,8 @@ void Customer(int CustID) {
 		// Wait Cashier to scan my items
 		EachCashierScanItemCV[MyCashierNum]->Wait(
 				EachCashierScanItemLock[MyCashierNum]);
-
+		printf(" Customer [%d]: Cashier [%d] finished scanning\n",
+				CustID, MyCashierNum);
 		if (CustDataArr[CustID]->InsufMoney) {
 			// Insufficient Money, needs to talk to Manager
 			CustToManagerLock.Acquire();

@@ -12,9 +12,11 @@ float GoodsPrices[10] = {0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5};
 
 Lock CustToCashierLineLock("CustToCashierLineLock");
 Lock PrvlCustLineLock("PrvlCustLineLock");//privilege
+Lock WholeLine("WholeLine");
 
 Condition* EachCashierLineCV[NUM_CASHIER];
 Condition* EachCashierPrvlLineCV[NUM_CASHIER];//privilege
+
 
 int EachCashierLineLength[NUM_CASHIER];
 int EachCashierRegLen[NUM_CASHIER];
@@ -34,51 +36,23 @@ bool CashierIsOnBreak[NUM_CASHIER];
 Lock CashierOnBreakLock("CashierOnBreakLock");
 Condition CashierOnBreakCV("CashierOnBreakCV");
 
+Lock ReadyLock("ReadyLock");
+Condition ReadyCV("ReadyCV");
+
+int Ready_Cashier=0;
+bool isReady = false;
 void Cashier(int CashierIndex){
+
     while(true){
-		printf("Cashier [%d] starts a work cycle\n", CashierIndex);
+		printf("  ImCashier_[%d]: starts a work cycle\n", CashierIndex);
+		printf("\tImCashier_[%d], PrvLen==[%d], RegLen==[%d]\n",
+				CashierIndex,EachCashierPrvLen[CashierIndex],EachCashierRegLen[CashierIndex]);
 
-		FinishedCustLock.Acquire();
-		if(FinishedCust>=NUM_CUSTOMER){
-			return;
-		}
-		FinishedCustLock.Release();
-
-		/*
-        // check if I am set on break
-    	CashierOnBreakLock.Acquire();
-        if(CashierIsOnBreak[CashierIndex]){
-        	printf("Cashier [%d] is going on break\n",CashierIndex);
-        	EachCashierPrvlLineCV[CashierIndex]->Broadcast(&PrvlCustLineLock);
-        	EachCashierPrvLen[CashierIndex]=0;
-
-			EachCashierLineCV[CashierIndex]->Broadcast(&CustToCashierLineLock);
-        	EachCashierRegLen[CashierIndex]=0;
-
-            EachCashierLineLength[CashierIndex]=0;
-
-        	printf("@ Cashier[%d] on break\n",CashierIndex);
-        	NumCashierOnBreak++;
-        	//ManagerWaitCashierSleep.Signal(&CashierOnBreakLock);
-        	printf("NumCashierOnBreak++ == [%d]\n",NumCashierOnBreak);
-        	CashierOnBreakCV.Wait(&CashierOnBreakLock);
-        	NumCashierOnBreak--;
-        	printf("NumCashierOnBreak-- == [%d]\n",NumCashierOnBreak);
-        	if(NumCashierOnBreak==0){
-        		printf("\tNumCashierOnBreak==0\n\n");
-        	//	ManagerWaitCashierWakeUp.Signal(&CashierOnBreakLock);
-        	}
-        	printf("@ Cashier[%d] back from break\n",CashierIndex);
-        	CashierOnBreakLock.Release();
-        }else{
-        	//printf("~ Cashier[%d] starts working\n",CashierIndex);
-        	CashierOnBreakLock.Release();
-        }
-		*/
-
-    	PrvlCustLineLock.Acquire();
+		WholeLine.Acquire();
+		PrvlCustLineLock.Acquire();
     	bool hasPrivilge = false;
         if(EachCashierPrvLen[CashierIndex]>0){
+        	printf("\tEachCashierPrvlLineCV [%d] Signal PrvlCustLineLock\n",CashierIndex);
         	EachCashierPrvlLineCV[CashierIndex]->Signal(&PrvlCustLineLock);
             EachCashierLineLength[CashierIndex]--;
         	EachCashierPrvLen[CashierIndex]--;
@@ -89,24 +63,26 @@ void Cashier(int CashierIndex){
         }
 
         if(hasPrivilge == false){
+			CustToCashierLineLock.Acquire();
+
         	PrvlCustLineLock.Release();//release PRIVILEGE lock
 			//>> Interact with Customer
-			CustToCashierLineLock.Acquire();
 			// If there are Customers in the line, then
 			// this Cashier must tell the 1st Customer to step up to the counter
 			// He does this by Signaling the Condition Variable which puts the 1st Customer
 			// on to the Ready Queue
 			if(EachCashierRegLen[CashierIndex]>0){
 				//debug
-				printf("Cashier [%d] Waiting Line Length = [%d]. Will decrease one...\n",
+				printf("  ImCashier_[%d]: Waiting Line Length = [%d]. Will decrease one...\n",
 					   CashierIndex, EachCashierLineLength[CashierIndex]);
 				//printf("Cashier: EachCashierLineCV[%d]->Signal(&CustToCashierLineLock);\n",CashierIndex);
+	        	printf("\tEachCashierLineCV [%d] Signal CustToCashierLineLock\n",CashierIndex);
 				EachCashierLineCV[CashierIndex]->Signal(&CustToCashierLineLock);
 				EachCashierRegLen[CashierIndex]--;
 				EachCashierLineLength[CashierIndex]--;
 				EachCashierIsBusy[CashierIndex] = true;
 			}else{
-				printf("Cashier [%d] Waiting Line Length = 0 !!!\n",
+				printf("  ImCashier_[%d]: Waiting Line Length = 0 !!!\n",
 				CashierIndex);
 				EachCashierIsBusy[CashierIndex] = false;
 				/*  Do I need this? Busy waiting?
@@ -127,15 +103,20 @@ void Cashier(int CashierIndex){
         }else{
         	PrvlCustLineLock.Release();
         }
+		WholeLine.Release();
 
         // The Cashier must now wait for the Customer to go up to his counter
 		// and give him his items (Just Cust Num, the items are stored in the matrix)
 		// Sleeping the Cashier frees up his EachCashierScanItemLock,
 		// wakes up one Customer and puts him on the
 		// Ready Queue
+        printf(" ## ImCashier_[%d]: EachCashierScanItemCV[CashierIndex]->Wait\n",
+        		CashierIndex);
         EachCashierScanItemCV[CashierIndex]->Wait(EachCashierScanItemLock[CashierIndex]);
         EachCashierIsBusy[CashierIndex] = true;//!!!
         int CurCustID = CustIDforEachCashier[CashierIndex];
+        printf("  ImCashier_[%d]: EachCashierIsBusy[%d] = true, by Cust [%d]\n",
+        		CashierIndex,CashierIndex, CurCustID);
 
         // Now Cashier starts scanning items
         // CustIDforEachCashier[MyCashierNum] = CustID;
@@ -156,11 +137,11 @@ void Cashier(int CashierIndex){
         	CashierToManagerLock.Acquire();
         	NumWaitingCashier++;
         	CashierWaitingCV->Wait(&CashierToManagerLock);
-        	printf("Cashier [%d] tells Manager Cust [%d] has insufficient money\n",
+        	printf("  ImCashier_[%d]: tells Manager Cust [%d] has insufficient money\n",
         			CashierIndex,CurCustID);
         	CashierToManagerLock.Release();
         }else{
-        	printf("Cashier [%d] asks Customer [%d] to pay [%.2f]\n",
+        	printf("  ImCashier_[%d]: asks Customer [%d] to pay [%.2f]\n",
                CashierIndex, CurCustID, CustTotal);//Correct!
 
 			TotalAmountLock.Acquire();

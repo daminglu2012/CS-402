@@ -34,8 +34,8 @@ void Manager(int ManagerID){
 	InsufCustCount = 0;
 	while(true){
 		FinishedCustLock.Acquire();
-		//printf("Manager starts a work cycle, Finished Cust==[%d]\n",
-		//		FinishedCust);
+		printf("\t\tManager starts a work cycle, Finished Cust==[%d]\n",
+				FinishedCust);
 
 		if(PrevTotal!=TotalAmount){
 			printf("Manager reports current total is [%.2f]\n",
