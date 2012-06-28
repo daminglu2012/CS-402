@@ -231,6 +231,10 @@ void Close_Syscall(int fd) {
     }
 }
 
+void Yield_Syscall() {
+    currentThread->Yield();
+}
+
 int CreateLock_Syscall(unsigned int vaddr, int len) {
     char *buf = new char [len + 1];
 
@@ -267,6 +271,7 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
     LockPool[nextLockPos].space = currentThread->space; // lock is in the currentThread's space
     LockPool[nextLockPos].isDestroyed = false;
     LockPool[nextLockPos].isToBeDestroyed = false;
+    LockPool[nextLockPos].threadsCount = 0;
 
     int rv = nextLockPos;
     LockPoolLock.Release();
@@ -276,28 +281,101 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
 }
 
 void DestroyLock_Syscall(int LockId) {
+    // Boundary check
     if (LockId<0 || LockId>MAX_LOCKS) {
       printf("%s", "LockId is out of boundary");
       return;
     }
 
     LockPoolLock.Acquire();
-    if (LockPool[LockId].lock == NULL) {
+    if (LockPool[LockId].isDestroyed == true) {
       printf("%s", "Lock is NULL, Cannot be Destroyed again\n");
       return;
     }
 
+    // the Lock is not owned by the current process
     if (LockPool[LockId].space != currentThread->space) {
       printf("%s", "Lock is not in the current process\n");
       return;
     }
 
     // one more case: if the lock is in use, how to 'remember' this destroy request???
+    if (LockPool[LockId].threadsCount > 0) {
+      printf("%s", "Lock cannot be destroyed right now, it is in use\n");
+      LockPool[LockId].isToBeDestroyed = true;
+      return;
+    }
 
     delete LockPool[LockId].lock;
     LockPool[LockId].lock = NULL;
     LockPool[LockId].isDestroyed = true;
     LockPoolBitMap->Clear(LockId);
+
+    LockPoolLock.Release();
+}
+
+void Acquire_Syscall(int LockId) {
+    // Boundary check
+    if (LockId<0 || LockId>MAX_LOCKS) {
+        printf("%s", "LockId is out of boundary");
+        return;
+    }
+
+    LockPoolLock.Acquire();
+    if (LockPool[LockId].isDestroyed == true) {
+        printf("%s", "Lock is NULL, Cannot be Acquire again\n");
+        return;
+    }
+
+    // the Lock is not owned by the current process
+    if (LockPool[LockId].space != currentThread->space) {
+        printf("%s", "Lock is not in the current process\n");
+        return;
+    }
+
+    LockPool[LockId].threadsCount++;
+    LockPool[LockId].lock->Acquire();
+
+    LockPoolLock.Release();
+}
+
+void Release_Syscall(int LockId) {
+    // Boundary check
+    if (LockId<0 || LockId>MAX_LOCKS) {
+      printf("%s", "LockId is out of boundary");
+      return;
+    }
+
+    LockPoolLock.Acquire();
+    if (LockPool[LockId].isDestroyed == true) {
+        printf("%s", "Lock is NULL, Cannot be Release again\n");
+        return;
+    }
+
+    // the Lock is not owned by the current process
+    if (LockPool[LockId].space != currentThread->space) {
+        printf("%s", "Lock is not in the current process\n");
+        return;
+    }
+
+    if (LockPool[LockId].threadsCount > 0) {
+        LockPool[LockId].threadsCount--;
+        if (LockPool[LockId].threadsCount==0) {
+            if(LockPool[LockId].isToBeDestroyed == true) {
+                LockPool[LockId].lock->Release();
+                delete LockPool[LockId].lock;
+                LockPool[LockId].lock = NULL;
+                LockPool[LockId].isDestroyed = true;
+                LockPool[LockId].isToBeDestroyed = false;
+            } else {
+                LockPool[LockId].lock->Release();
+            }
+        } 
+    } else {
+        printf("%s", "Release the Lock too many times\n");
+        return;
+    }
+
     LockPoolLock.Release();
 }
 
@@ -337,6 +415,12 @@ void ExceptionHandler(ExceptionType which) {
 		DEBUG('a', "Close syscall.\n");
 		Close_Syscall(machine->ReadRegister(4));
 		break;
+
+      case SC_Yield:
+    DEBUG('a', "Yield syscall.\n");
+    Yield_Syscall();
+    break;
+    
     // Lock syscall
       case SC_CreateLock:
     DEBUG('a', "Create a Lock.\n");
@@ -347,14 +431,14 @@ void ExceptionHandler(ExceptionType which) {
     DEBUG('a', "Destroy a Lock.\n");
     DestroyLock_Syscall(machine->ReadRegister(4));
     break;
-    //   case SC_Acquire:
-    // DEBUG('a', "Acquire a Lock.\n");
-    // Acquire_Syscall(machine->ReadRegister(4));
-    // break;
-    //   case SC_Release:
-    // DEBUG('a', "Acquire a Lock.\n");
-    // Release_Syscall(machine->ReadRegister(4));
-    // break;
+      case SC_Acquire:
+    DEBUG('a', "Acquire a Lock.\n");
+    Acquire_Syscall(machine->ReadRegister(4));
+    break;
+      case SC_Release:
+    DEBUG('a', "Acquire a Lock.\n");
+    Release_Syscall(machine->ReadRegister(4));
+    break;
 
     // CV syscall: TO Be Continued...
 	}
