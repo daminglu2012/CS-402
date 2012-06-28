@@ -30,6 +30,11 @@
 #define SC_Fork		9
 #define SC_Yield	10
 
+#define SC_CreateLock 	11
+#define SC_DestroyLock 	12
+#define SC_Acquire 		13
+#define SC_Release 		14
+ 
 #define MAXFILENAME 256
 
 #ifndef IN_ASM
@@ -66,7 +71,6 @@ SpaceId Exec(char *name);
  */
 int Join(SpaceId id); 	
  
-
 /* File system operations: Create, Open, Read, Write, Close
  * These functions are patterned after UNIX -- files represent
  * both files *and* hardware I/O devices.
@@ -125,6 +129,25 @@ void Fork(void (*func)());
  * or not. 
  */
 void Yield();		
+
+int CreateLock(char *LockName, int NameLen);
+void DestroyLcok(int LockId);
+void Acquire(int LockId);
+void Release(int LockId);
+
+// CreateLock()
+// CreateCV()
+// DeleteLock()
+// DeleteCV()
+// Acquire()
+// Release()
+// Wait()
+// Signal()
+// Broadcast()
+
+// Fork()
+// Exec()
+// Exit()
 
 #endif /* IN_ASM */
 

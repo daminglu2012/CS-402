@@ -7,7 +7,7 @@
 
 #include "copyright.h"
 #include "system.h"
-
+#include "machine.h"
 // This defines *all* of the global data structures used by Nachos.
 // These are all initialized and de-allocated by this file.
 
@@ -29,6 +29,14 @@ SynchDisk   *synchDisk;
 
 #ifdef USER_PROGRAM	// requires either FILESYS or FILESYS_STUB
 Machine *machine;	// user program memory and registers
+
+BitMap *PhysBitMap;
+Lock PhysBitMapLock("PhysBitMapLock");
+
+MachineLock LockPool[MAX_LOCKS];
+BitMap *LockPoolBitMap;
+Lock LockPoolLock("LockPoolLock");
+
 #endif
 
 #ifdef NETWORK
@@ -149,6 +157,8 @@ Initialize(int argc, char **argv)
     
 #ifdef USER_PROGRAM
     machine = new Machine(debugUserProg);	// this must come first
+    PhysBitMap = new BitMap(NumPhysPages); // init unused physical pages
+    LockPoolBitMap = new BitMap(MAX_LOCKS);
 #endif
 
 #ifdef FILESYS
@@ -178,6 +188,8 @@ Cleanup()
     
 #ifdef USER_PROGRAM
     delete machine;
+    delete PhysBitMap;
+    delete LockPoolBitMap;
 #endif
 
 #ifdef FILESYS_NEEDED
@@ -191,7 +203,6 @@ Cleanup()
     delete timer;
     delete scheduler;
     delete interrupt;
-    
     Exit(0);
 }
 

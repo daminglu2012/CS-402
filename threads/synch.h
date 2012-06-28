@@ -76,14 +76,15 @@ class Lock {
 					// holds this lock.  Useful for
 					// checking in Release, and in
 					// Condition variable ops below.
-
+    List* lockwaitQueue;
+    
   private:
     char* name;				// for debugging
     // plus some other stuff you'll need to define
     //-> DL
     bool isFree;
     Thread* owner;
-    List* lockwaitQueue;
+    
     //<- DL
 };
 
