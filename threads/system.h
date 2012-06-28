@@ -50,7 +50,7 @@ struct MachineLock {
 							// the lock, context switch to DestroyLock
 							// occurs, context switch back ERROR!!! The OS need to 'Remember'
 							// the DestroyLock Request until there is no thread in the waitQ
-	int threadsCount;	// Number of threads that own the Lock
+	int acquireCount;	// Number of Acquire() 
 };
 
 extern MachineLock LockPool[MAX_LOCKS];

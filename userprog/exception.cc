@@ -271,7 +271,7 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
     LockPool[nextLockPos].space = currentThread->space; // lock is in the currentThread's space
     LockPool[nextLockPos].isDestroyed = false;
     LockPool[nextLockPos].isToBeDestroyed = false;
-    LockPool[nextLockPos].threadsCount = 0;
+    LockPool[nextLockPos].acquireCount = 0;
 
     int rv = nextLockPos;
     LockPoolLock.Release();
@@ -300,7 +300,7 @@ void DestroyLock_Syscall(int LockId) {
     }
 
     // one more case: if the lock is in use, how to 'remember' this destroy request???
-    if (LockPool[LockId].threadsCount > 0) {
+    if (LockPool[LockId].acquireCount > 0) {
       printf("%s", "Lock cannot be destroyed right now, it is in use\n");
       LockPool[LockId].isToBeDestroyed = true;
       return;
@@ -333,7 +333,7 @@ void Acquire_Syscall(int LockId) {
         return;
     }
 
-    LockPool[LockId].threadsCount++;
+    LockPool[LockId].acquireCount++;
     LockPool[LockId].lock->Acquire();
 
     LockPoolLock.Release();
@@ -358,9 +358,9 @@ void Release_Syscall(int LockId) {
         return;
     }
 
-    if (LockPool[LockId].threadsCount > 0) {
-        LockPool[LockId].threadsCount--;
-        if (LockPool[LockId].threadsCount==0) {
+    if (LockPool[LockId].acquireCount > 0) {
+        LockPool[LockId].acquireCount--;
+        if (LockPool[LockId].acquireCount==0) {
             if(LockPool[LockId].isToBeDestroyed == true) {
                 LockPool[LockId].lock->Release();
                 delete LockPool[LockId].lock;
